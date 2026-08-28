@@ -84,3 +84,42 @@ def test_plot_raises_when_there_are_no_series():
     report = rasad.measure(constant_model, params={}, runs=10)
     with pytest.raises(ValueError, match="no time series"):
         report.plot()
+
+
+def test_custom_thresholds_change_the_verdict():
+    lenient = rasad.measure(
+        normal_model, params={"mu": 100.0, "sigma": 3.0}, runs=200
+    )
+    strict = rasad.measure(
+        normal_model,
+        params={"mu": 100.0, "sigma": 3.0},
+        runs=200,
+        thresholds={"robust": 0.001, "wobbly": 0.005},
+    )
+    assert lenient.scalars["value"]["verdict"] == "robust"
+    assert strict.scalars["value"]["verdict"] == "fragile"
+
+
+def test_report_records_the_thresholds_it_used():
+    report = rasad.measure(constant_model, params={}, runs=10)
+    assert report.thresholds == {"robust": 0.05, "wobbly": 0.20}
+
+
+def test_summary_states_the_thresholds_and_calls_them_a_convention():
+    text = rasad.measure(constant_model, params={}, runs=10).summary()
+    assert "اصطلاح" in text
+    assert "0.0500" in text or "0.05" in text
+
+
+def test_bad_thresholds_fail_before_any_run():
+    calls = []
+
+    def counting_model(params, seed):
+        calls.append(seed)
+        return {"value": 1.0}
+
+    with pytest.raises(ValueError):
+        rasad.measure(
+            counting_model, params={}, runs=50, thresholds={"robust": 0.9, "wobbly": 0.1}
+        )
+    assert calls == []

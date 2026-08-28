@@ -50,6 +50,9 @@ class Report:
         :func:`rasad.analyzer.divergence`.
     runs
         How many runs the report was built from.
+    thresholds
+        The classification cutoffs that were used, as a plain dict of
+        floats (see :data:`rasad.analyzer.THRESHOLDS`).
     """
 
     def __init__(
@@ -57,10 +60,12 @@ class Report:
         scalars: dict[str, dict[str, Any]],
         series: dict[str, list[float]],
         runs: int,
+        thresholds: dict[str, float],
     ) -> None:
         self.scalars = scalars
         self.series = series
         self.runs = runs
+        self.thresholds = thresholds
 
     def summary(self) -> str:
         """Render the report as a plain-text table.
@@ -74,6 +79,11 @@ class Report:
             line per series showing how the divergence grew.
         """
         lines = [f"Rasad report of {self.runs} runs"]
+        lines.append(
+            f"حدود التصنيف (اصطلاح لا قاعدة): صامد < "
+            f"{_fmt_ratio(self.thresholds['robust'])} ≤ متذبذب ≤ "
+            f"{_fmt_ratio(self.thresholds['wobbly'])} < هش"
+        )
 
         if self.scalars:
             lines.append("Scalar outputs:")

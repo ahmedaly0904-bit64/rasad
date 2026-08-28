@@ -11,6 +11,10 @@ from collections.abc import Sequence
 
 import numpy as np
 
+# Default classification cutoffs. These are a convention chosen by the
+# project's authors, not a derived or theoretical result: a caller may
+# pass their own thresholds to ``classify`` and ``rasad.measure``, in
+# which case these defaults are ignored.
 THRESHOLDS: dict[str, float] = {"robust": 0.05, "wobbly": 0.20}
 
 
@@ -65,13 +69,58 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     }
 
 
-def classify(cv: float) -> str:
+def validate_thresholds(thresholds: dict[str, float]) -> dict[str, float]:
+    """Check caller-supplied classification cutoffs and copy them.
+
+    The thresholds are a convention, not a measured property of the data,
+    so whatever the caller passes is taken as-is once it passes these
+    checks.
+
+    Parameters
+    ----------
+    thresholds
+        A dict with exactly the keys ``robust`` and ``wobbly``. Both
+        values must be finite numbers greater than 0, and ``robust``
+        must be strictly below ``wobbly``.
+
+    Returns
+    -------
+    dict[str, float]
+        A plain-float copy of ``thresholds``, so mutating the caller's
+        dict afterwards cannot change the classification.
+
+    Raises
+    ------
+    ValueError
+        When the keys, the positivity/finiteness, or the ordering of the
+        values do not satisfy the rules above.
+    """
+    keys = set(thresholds)
+    if keys != {"robust", "wobbly"}:
+        raise ValueError(
+            f"thresholds must have exactly the keys 'robust' and 'wobbly', got {sorted(keys)}"
+        )
+    robust = thresholds["robust"]
+    wobbly = thresholds["wobbly"]
+    for name, value in (("robust", robust), ("wobbly", wobbly)):
+        if not (math.isfinite(value) and value > 0):
+            raise ValueError(f"{name} threshold must be a finite positive number, got {value!r}")
+    if not robust < wobbly:
+        raise ValueError("robust must be below wobbly")
+    return {"robust": float(robust), "wobbly": float(wobbly)}
+
+
+def classify(cv: float, thresholds: dict[str, float] | None = None) -> str:
     """Label a coefficient of variation by its robustness cutoff.
 
     Parameters
     ----------
     cv
         The coefficient of variation of a sample.
+    thresholds
+        The classification cutoffs. ``None`` means use the module-level
+        :data:`THRESHOLDS` default; any other dict is validated with
+        :func:`validate_thresholds` first.
 
     Returns
     -------
@@ -79,9 +128,13 @@ def classify(cv: float) -> str:
         ``"robust"`` below the robust threshold, ``"wobbly"`` up to and
         including the wobbly threshold, ``"fragile"`` beyond it.
     """
-    if cv < THRESHOLDS["robust"]:
+    if thresholds is None:
+        thresholds = THRESHOLDS
+    else:
+        thresholds = validate_thresholds(thresholds)
+    if cv < thresholds["robust"]:
         return "robust"
-    if cv <= THRESHOLDS["wobbly"]:
+    if cv <= thresholds["wobbly"]:
         return "wobbly"
     return "fragile"
 

@@ -89,3 +89,51 @@ def test_cv_is_zero_when_the_value_never_varies_at_zero():
     assert result["std"] == 0.0
     assert result["cv"] == 0.0
     assert classify(result["cv"]) == "robust"
+
+
+def test_classify_accepts_custom_thresholds():
+    strict = {"robust": 0.01, "wobbly": 0.05}
+    assert classify(0.02) == "robust"
+    assert classify(0.02, strict) == "wobbly"
+
+
+def test_validate_thresholds_returns_plain_floats():
+    from rasad.analyzer import validate_thresholds
+
+    out = validate_thresholds({"robust": 0.1, "wobbly": 0.3})
+    assert out == {"robust": 0.1, "wobbly": 0.3}
+    assert all(type(v) is float for v in out.values())
+
+
+def test_validate_thresholds_copies_so_the_caller_cannot_mutate_it():
+    from rasad.analyzer import validate_thresholds
+
+    original = {"robust": 0.1, "wobbly": 0.3}
+    out = validate_thresholds(original)
+    original["robust"] = 999.0
+    assert out["robust"] == 0.1
+
+
+def test_validate_thresholds_rejects_wrong_keys():
+    from rasad.analyzer import validate_thresholds
+
+    with pytest.raises(ValueError, match="keys"):
+        validate_thresholds({"robust": 0.1})
+    with pytest.raises(ValueError, match="keys"):
+        validate_thresholds({"robust": 0.1, "wobbly": 0.3, "extra": 1.0})
+
+
+def test_validate_thresholds_rejects_non_positive_values():
+    from rasad.analyzer import validate_thresholds
+
+    with pytest.raises(ValueError, match="positive"):
+        validate_thresholds({"robust": 0.0, "wobbly": 0.3})
+    with pytest.raises(ValueError, match="positive"):
+        validate_thresholds({"robust": -0.1, "wobbly": 0.3})
+
+
+def test_validate_thresholds_rejects_an_inverted_order():
+    from rasad.analyzer import validate_thresholds
+
+    with pytest.raises(ValueError, match="robust must be below wobbly"):
+        validate_thresholds({"robust": 0.5, "wobbly": 0.2})
