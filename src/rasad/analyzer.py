@@ -27,7 +27,8 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     dict
         Keys ``n``, ``mean``, ``std``, ``cv``, ``min``, ``max``, ``p05``, ``p95``.
         ``std`` is the sample standard deviation (``ddof=1``); ``cv`` is
-        ``std / abs(mean)`` and is infinite when the mean is zero.
+        ``std / abs(mean)``; it is zero whenever ``std`` is zero, and
+        infinite when the mean is zero but the values still vary.
 
     Raises
     ------
@@ -41,7 +42,14 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     n = int(arr.size)
     mean = float(arr.mean())
     std = float(arr.std(ddof=1))
-    cv = math.inf if mean == 0.0 else std / abs(mean)
+    # ترتيب الفحص مقصود: انحراف صفر يعني قيمة محددة تمامًا مهما كان المتوسط.
+    # لولا هذا لصُنّف مخرَج ثابت عند صفر "هشًا" وهو أثبت ما يكون.
+    if std == 0.0:
+        cv = 0.0
+    elif mean == 0.0:
+        cv = math.inf
+    else:
+        cv = std / abs(mean)
     p05 = float(np.percentile(arr, 5))
     p95 = float(np.percentile(arr, 95))
 

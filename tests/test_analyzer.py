@@ -77,3 +77,15 @@ def test_divergence_rejects_unequal_lengths():
 def test_divergence_needs_at_least_two_series():
     with pytest.raises(ValueError, match="at least 2"):
         divergence([[1.0, 2.0]])
+
+
+def test_cv_is_zero_when_the_value_never_varies_at_zero():
+    """قيمة ثابتة عند صفر محددة تمامًا — لا تذبذب فيها إطلاقًا.
+
+    اكتُشف على بيانات حقيقية: مخرَج عُمران total_famines كان صفرًا في كل
+    تشغيلة، فأعطى cv = inf وصُنّف "هشًا" وهو أثبت ما في التقرير.
+    """
+    result = summarize([0.0] * 10)
+    assert result["std"] == 0.0
+    assert result["cv"] == 0.0
+    assert classify(result["cv"]) == "robust"
