@@ -6,7 +6,7 @@ dependencies = ["numpy>=1.26", "plotly>=5.9"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov>=5.0"]
-examples = ["mesa>=3.5", "networkx>=3.0", "pandas>=2.0"]
+examples = ["mesa>=3.5", "networkx>=3.0", "pandas>=2.0", "simpy>=4.1"]
 
 [build-system]
 requires = ["setuptools>=68"]
