@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from rasad.analyzer import THRESHOLDS, classify, summarize
+from rasad.analyzer import THRESHOLDS, classify, divergence, summarize
 
 
 def test_constant_values_have_zero_spread():
@@ -52,3 +52,28 @@ def test_classify_boundaries():
     assert classify(0.20) == "wobbly"
     assert classify(0.201) == "fragile"
     assert classify(math.inf) == "fragile"
+
+
+def test_identical_series_never_diverge():
+    series = [[1.0, 2.0, 3.0, 4.0]] * 10
+    assert divergence(series) == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_divergence_grows_like_sqrt_time_for_random_walk():
+    rng = np.random.default_rng(7)
+    steps = 401
+    walks = [np.cumsum(rng.normal(0.0, 1.0, steps)).tolist() for _ in range(4000)]
+
+    spread = divergence(walks)
+    ratio = spread[400] / spread[100]
+    assert abs(ratio - 2.0) < 0.15
+
+
+def test_divergence_rejects_unequal_lengths():
+    with pytest.raises(ValueError, match="same length"):
+        divergence([[1.0, 2.0], [1.0, 2.0, 3.0]])
+
+
+def test_divergence_needs_at_least_two_series():
+    with pytest.raises(ValueError, match="at least 2"):
+        divergence([[1.0, 2.0]])

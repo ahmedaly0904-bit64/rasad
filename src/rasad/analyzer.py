@@ -76,3 +76,36 @@ def classify(cv: float) -> str:
     if cv <= THRESHOLDS["wobbly"]:
         return "wobbly"
     return "fragile"
+
+
+def divergence(series: Sequence[Sequence[float]]) -> list[float]:
+    """Measure how far apart a set of time series has drifted by time step.
+
+    At each time step the runs are treated as a sample and the sample
+    standard deviation is taken across runs; a flat zero curve means the
+    runs agree, a growing curve means they are drifting apart.
+
+    Parameters
+    ----------
+    series
+        A sequence of equal-length time series, one per simulation run.
+
+    Returns
+    -------
+    list[float]
+        One sample standard deviation per time step, across runs.
+
+    Raises
+    ------
+    ValueError
+        When fewer than two series are provided, or when the series do
+        not all have the same length.
+    """
+    rows = [np.asarray(row, dtype=float) for row in series]
+    if len(rows) < 2:
+        raise ValueError("need at least 2 series to measure divergence")
+    if any(len(row) != len(rows[0]) for row in rows):
+        raise ValueError("all series must have the same length")
+
+    stack = np.stack(rows)
+    return [float(std) for std in stack.std(axis=0, ddof=1)]
