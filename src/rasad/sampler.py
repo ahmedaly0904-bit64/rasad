@@ -8,7 +8,6 @@ earlier ones or the caller's original dict.
 """
 
 import copy
-from typing import Any
 
 
 def make_plan(params: dict, runs: int, base_seed: int = 0) -> list[tuple[dict, int]]:
