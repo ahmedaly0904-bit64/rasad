@@ -64,3 +64,23 @@ def test_summary_names_every_output_and_its_verdict():
 def test_measure_rejects_fewer_than_two_runs():
     with pytest.raises(ValueError, match="at least 2"):
         rasad.measure(constant_model, params={}, runs=1)
+
+
+def test_plot_has_one_trace_per_series():
+    report = rasad.measure(random_walk_model, params={"steps": 20}, runs=50)
+    fig = report.plot()
+    assert len(fig.data) == 1
+    assert fig.data[0].name == "trace"
+
+
+def test_plot_y_values_match_the_divergence_numbers():
+    report = rasad.measure(random_walk_model, params={"steps": 20}, runs=50)
+    fig = report.plot()
+    assert list(fig.data[0].y) == report.series["trace"]
+    assert list(fig.data[0].x) == list(range(20))
+
+
+def test_plot_raises_when_there_are_no_series():
+    report = rasad.measure(constant_model, params={}, runs=10)
+    with pytest.raises(ValueError, match="no time series"):
+        report.plot()

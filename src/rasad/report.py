@@ -9,6 +9,8 @@ web layer becomes a second view over the same data, built from the same
 import math
 from typing import Any
 
+import plotly.graph_objects as go
+
 ARABIC_VERDICT = {
     "robust": "صامد",
     "wobbly": "متذبذب",
@@ -93,3 +95,38 @@ class Report:
                 )
 
         return "\n".join(lines)
+
+    def plot(self) -> go.Figure:
+        """Render the report as a divergence chart.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            One line trace per series in :attr:`series`, x being the
+            time step and y the standard deviation between runs.
+
+        Raises
+        ------
+        ValueError
+            When there is no time series to plot.
+        """
+        if not self.series:
+            raise ValueError("no time series to plot")
+
+        fig = go.Figure()
+        for name, curve in self.series.items():
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(len(curve))),
+                    y=curve,
+                    mode="lines",
+                    name=name,
+                )
+            )
+
+        fig.update_layout(
+            title=f"Rasad report of {self.runs} runs",
+            xaxis_title="خطوة الزمن",
+            yaxis_title="الانحراف المعياري بين الجولات",
+        )
+        return fig
