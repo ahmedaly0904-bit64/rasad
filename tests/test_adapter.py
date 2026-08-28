@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from rasad.adapter import split_outputs, validate_model
@@ -49,3 +50,70 @@ def test_rejects_a_boolean_output():
 def test_rejects_a_string_output():
     with pytest.raises(TypeError, match="unsupported output"):
         split_outputs({"name": "Nation_A"})
+
+
+def test_accepts_a_numpy_integer_as_a_scalar():
+    scalars, series = split_outputs({"wars": np.int64(5)})
+    assert scalars == {"wars": 5.0}
+    assert type(scalars["wars"]) is float
+    assert series == {}
+
+
+def test_accepts_a_numpy_float_of_any_width():
+    scalars, _ = split_outputs({"a": np.float32(1.5), "b": np.float64(2.5)})
+    assert scalars == {"a": 1.5, "b": 2.5}
+    assert all(type(v) is float for v in scalars.values())
+
+
+def test_accepts_a_one_dimensional_numpy_array_as_a_series():
+    _, series = split_outputs({"trace": np.array([1.0, 2.0, 3.0])})
+    assert series == {"trace": [1.0, 2.0, 3.0]}
+    assert all(type(v) is float for v in series["trace"])
+
+
+def test_accepts_a_zero_dimensional_numpy_array_as_a_scalar():
+    scalars, series = split_outputs({"total": np.array(7.0)})
+    assert scalars == {"total": 7.0}
+    assert series == {}
+
+
+def test_rejects_a_numpy_boolean():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"collapsed": np.bool_(True)})
+
+
+def test_rejects_a_numpy_boolean_array():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"flags": np.array([True, False])})
+
+
+def test_rejects_a_multidimensional_array():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"grid": np.array([[1.0, 2.0], [3.0, 4.0]])})
+
+
+def test_rejects_an_object_dtype_array():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"stuff": np.array(["a", "b"], dtype=object)})
+
+
+def test_still_rejects_a_python_boolean():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"collapsed": True})
+
+
+def test_rejects_a_list_of_python_booleans():
+    """قائمة بولين تُبلع كأصفار وآحاد فتنتج إحصاءً بلا معنى — نفس فخ القيمة المفردة."""
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"alive": [True, False, True]})
+
+
+def test_rejects_a_list_of_strings_with_a_clear_message():
+    """بدون فحص العناصر يخرج ValueError مربك من float() بدل رسالة مفهومة."""
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"names": ["a", "b"]})
+
+
+def test_rejects_a_list_of_nested_lists():
+    with pytest.raises(TypeError, match="unsupported output"):
+        split_outputs({"grid": [[1.0, 2.0], [3.0, 4.0]]})

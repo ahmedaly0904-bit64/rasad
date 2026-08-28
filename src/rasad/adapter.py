@@ -9,9 +9,15 @@ This module validates that a candidate function actually has those two
 parameters, and splits a returned result dict into scalar results (a
 single final number) and time series (lists of numbers), rejecting
 anything a simulation should never produce.
+
+Numpy scalars of numeric dtype and one-dimensional numpy arrays of
+numeric dtype are accepted and converted to plain Python values.
+Booleans are never accepted, whether Python ``bool`` or ``numpy.bool_``.
 """
 
 import inspect
+
+import numpy as np
 from collections.abc import Callable
 from typing import Any
 
@@ -41,6 +47,19 @@ def validate_model(fn: Callable[..., dict]) -> None:
         )
 
 
+def _is_number(value: Any) -> bool:
+    """True for a real number — never for a boolean, of either flavour.
+
+    ``isinstance(True, int)`` is True in Python and ``np.bool_`` is a numpy
+    scalar, so both must be excluded before any numeric test.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        return False
+    if isinstance(value, (int, float)):
+        return True
+    return isinstance(value, np.generic) and np.issubdtype(value.dtype, np.number)
+
+
 def split_outputs(out: dict[str, Any]) -> tuple[dict[str, float], dict[str, list[float]]]:
     """Split a model result into scalar results and time series.
 
@@ -49,6 +68,9 @@ def split_outputs(out: dict[str, Any]) -> tuple[dict[str, float], dict[str, list
     out
         The dict returned by a model run. Each value must be a number
         (a scalar result) or a list/tuple of numbers (a time series).
+        Numpy scalars of numeric dtype and zero-dimensional numpy arrays
+        of numeric dtype count as numbers; one-dimensional numpy arrays
+        of numeric dtype count as time series.
 
     Returns
     -------
@@ -60,18 +82,47 @@ def split_outputs(out: dict[str, Any]) -> tuple[dict[str, float], dict[str, list
     Raises
     ------
     TypeError
-        When a value is a ``bool``, a ``str``, ``bytes``, or any other
-        type that is neither a single number nor a sequence of numbers.
+        When a value is a ``bool`` or ``numpy.bool_``, a ``str``,
+        ``bytes``, or any other type that is neither a single number
+        nor a sequence of numbers, including numpy arrays with two or
+        more dimensions and arrays of boolean or object dtype.
     """
     scalars: dict[str, float] = {}
     series: dict[str, list[float]] = {}
 
     for key, value in out.items():
-        if isinstance(value, bool):
+        if isinstance(value, (bool, np.bool_)):
             raise TypeError(f"unsupported output {key!r}: boolean values are not allowed")
-        if isinstance(value, (int, float)):
+        if isinstance(value, np.ndarray):
+            if value.ndim == 0 and np.issubdtype(value.dtype, np.number):
+                scalars[key] = float(value)
+            elif value.ndim == 1 and np.issubdtype(value.dtype, np.number):
+                series[key] = [float(item) for item in value]
+            elif np.issubdtype(value.dtype, np.bool_):
+                raise TypeError(
+                    f"unsupported output {key!r}: boolean arrays are not allowed"
+                )
+            else:
+                raise TypeError(
+                    f"unsupported output {key!r}: numpy array with dtype "
+                    f"{value.dtype} and {value.ndim} dimension(s) is not supported"
+                )
+        elif isinstance(value, (int, float)) or (
+            isinstance(value, np.generic) and np.issubdtype(value.dtype, np.number)
+        ):
             scalars[key] = float(value)
         elif isinstance(value, (list, tuple)):
+            # كل عنصر يُفحص: قائمة بولين أو نصوص تمر صامتة لولا هذا،
+            # فتنتج إحصاءً على أرقام لا تعني شيئًا.
+            bad = next(
+                ((i, v) for i, v in enumerate(value) if not _is_number(v)), None
+            )
+            if bad is not None:
+                index, item = bad
+                raise TypeError(
+                    f"unsupported output {key!r}: element {index} is "
+                    f"{type(item).__name__}, not a number"
+                )
             series[key] = [float(item) for item in value]
         else:
             raise TypeError(
