@@ -1,4 +1,4 @@
-"""Measure how robust Omran's results are — 100 runs, 100 simulated years."""
+"""Measure how variable Omran's results are — 100 runs, 100 simulated years."""
 
 import rasad
 from rasad.adapters.omran import make_omran_run

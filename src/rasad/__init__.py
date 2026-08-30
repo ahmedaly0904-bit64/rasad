@@ -1,4 +1,4 @@
-"""Rasad — measuring the robustness of simulation results."""
+"""Rasad — measuring the variability of simulation results."""
 
 from collections.abc import Callable
 from typing import Any
@@ -25,7 +25,7 @@ def measure(
     base_seed: int = 0,
     thresholds: dict[str, float] | None = None,
 ) -> Report:
-    """Measure the robustness of a simulation model's output.
+    """Measure the variability of a simulation model's output.
 
     Parameters
     ----------
@@ -41,15 +41,15 @@ def measure(
     thresholds
         The classification cutoffs. ``None`` means use the default
         :data:`rasad.analyzer.THRESHOLDS`. These values are a convention
-        the caller owns — they describe what counts as "robust" /
-        "wobbly" / "fragile" for this measurement and are not derived
-        from the data. A supplied dict is validated before any run.
+        the caller owns — they describe what counts as "low" /
+        "moderate" / "high" variability for this measurement and are not
+        derived from the data. A supplied dict is validated before any run.
 
     Returns
     -------
     Report
-        Per scalar output its summary plus a verdict, per series output
-        its divergence curve, the run count, and the thresholds used.
+        Per scalar output its summary plus a variability label, per series
+        output its divergence curve, the run count, and the thresholds used.
 
     Raises
     ------
@@ -76,7 +76,7 @@ def measure(
     scalars: dict[str, dict[str, Any]] = {}
     for name, values in scalar_values.items():
         stats = summarize(values)
-        stats["verdict"] = classify(stats["cv"], thresholds)
+        stats["variability"] = classify(stats["cv"], thresholds)
         scalars[name] = stats
 
     series = {name: divergence(curves) for name, curves in series_curves.items()}

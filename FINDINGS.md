@@ -7,22 +7,22 @@ Omran at commit `ccba093`, **with no line of it modified**.
 
 ## In one sentence
 
-> **Nothing numeric in Omran's output is robust.** Its numbers describe a particular run,
+> **No numeric output of Omran has low variability.** Its numbers describe a particular run,
 > not the behaviour of the model.
 
 | Output | Mean | cv | Verdict |
 |---|---|---|---|
-| `final_total_population` | 4,649 | 0.28 | **fragile** |
-| `survivors` | 1.14 | 0.31 | **fragile** |
-| `total_wars` | 13.4 | 0.40 | **fragile** |
-| `total_famines` | 0 | 0 | robust |
+| `final_total_population` | 4,649 | 0.28 | **high** |
+| `survivors` | 1.14 | 0.31 | **high** |
+| `total_wars` | 13.4 | 0.40 | **high** |
+| `total_famines` | 0 | 0 | low |
 
 Final population ranges from **2,704 to 6,774** across 90% of runs — the number can double on
 the seed alone.
 
 ## Three findings
 
-1. **Famines never happen.** Zero in all 100 runs over 100 years. Stable by measurement, but
+1. **Famines never happen.** Zero in all 100 runs over 100 years. Low variability by measurement, but
    an open question in the model: either the mechanism is never reached, or its condition is
    unreachable with these parameters.
 
@@ -40,7 +40,7 @@ the seed alone.
 ## A bug in Rasad that this data exposed
 
 `total_famines` was zero in every run: zero standard deviation, zero mean. Since
-`cv = std / |mean|`, that gave `inf` and was classified **fragile** — the single most stable
+`cv = std / |mean|`, that gave `inf` and was classified **high** variability — the single most stable
 output in the report.
 
 The reference models missed it: the zero-mean test used `[-1, 1]`, whose standard deviation is
@@ -58,14 +58,14 @@ nobody thought to write a test for.
 
 ## الإجابة في جملة
 
-> **لا شيء في مخرجات عُمران العددية صامد.** أرقامه تصف تشغيلة بعينها، لا سلوك النموذج.
+> **لا مخرَج عدديًّا واحدًا في عُمران تغايره منخفض.** أرقامه تصف تشغيلة بعينها، لا سلوك النموذج.
 
-| المخرَج | المتوسط | معامل التغاير | الحكم |
+| المخرَج | المتوسط | معامل التغاير | التصنيف |
 |---|---|---|---|
-| `final_total_population` | ٤٬٦٤٩ | ٠٫٢٨ | **هش** |
-| `survivors` | ١٫١٤ | ٠٫٣١ | **هش** |
-| `total_wars` | ١٣٫٤ | ٠٫٤٠ | **هش** |
-| `total_famines` | ٠ | ٠ | **صامد** |
+| `final_total_population` | ٤٬٦٤٩ | ٠٫٢٨ | **مرتفع** |
+| `survivors` | ١٫١٤ | ٠٫٣١ | **مرتفع** |
+| `total_wars` | ١٣٫٤ | ٠٫٤٠ | **مرتفع** |
+| `total_famines` | ٠ | ٠ | **منخفض** |
 
 السكان النهائيون يتراوحون بين **٢٬٧٠٤ و٦٬٧٧٤** في ٩٠٪ من التشغيلات — أي أن الرقم قد يتضاعف تبعًا للبذرة وحدها. أي جملة من نوع «انتهت المحاكاة بـ ٤٬٦٠٠ نسمة» بلا معنى ما لم تُذكر معها هذه السعة.
 
@@ -75,7 +75,7 @@ nobody thought to write a test for.
 
 `total_famines` = صفر في **كل** التشغيلات المئة، على مدى مئة سنة.
 
-هذا صامد بمعنى القياس، لكنه سؤال مفتوح في النموذج: إما أن آلية المجاعة لا تُستدعى أصلًا، أو أن شروطها لا تتحقق بهذه المعاملات. الحالتان تستحقان النظر — عدّاد لا يتحرك أبدًا إما كود ميت أو شرط مستحيل.
+تغايره منخفض بمعنى القياس، لكنه سؤال مفتوح في النموذج: إما أن آلية المجاعة لا تُستدعى أصلًا، أو أن شروطها لا تتحقق بهذه المعاملات. الحالتان تستحقان النظر — عدّاد لا يتحرك أبدًا إما كود ميت أو شرط مستحيل.
 
 ## ٢. عُمران لا يُعيد إنتاج نتائجه بنفس البذرة
 
@@ -122,7 +122,7 @@ for pair, length in border_lengths.items():
 
 الأرقام أعلاه من **قياس واحد**. قياس آخر بنفس البذور أعطى متوسطًا ٤٬٦٧٥ بدل ٤٬٦٤٩.
 
-**الأحكام لم تتغيّر** — الهش بقي هشًا والصامد صامدًا. الاتجاه موثوق؛ الخانات العشرية ليست.
+**التصنيفات لم تتغيّر** — المرتفع بقي مرتفعًا والمنخفض منخفضًا. الاتجاه موثوق؛ الخانات العشرية ليست.
 
 ## ٣. منحنى التباعد
 
@@ -136,7 +136,7 @@ for pair, length in border_lengths.items():
 
 ## بق في رَصَد كشفته هذه البيانات
 
-`total_famines` كان صفرًا في كل تشغيلة: انحرافه صفر، ومتوسطه صفر. وبما أن `cv = std / |mean|`، أعطى `inf` فصُنّف **هشًا** — وهو أثبت مخرَج في التقرير.
+`total_famines` كان صفرًا في كل تشغيلة: انحرافه صفر، ومتوسطه صفر. وبما أن `cv = std / |mean|`، أعطى `inf` فصُنّف **مرتفع التغاير** — وهو أثبت مخرَج في التقرير.
 
 النماذج المرجعية لم تمسك هذا: اختبار المتوسط-الصفر فيها كان `[-1, 1]`، وانحرافه ليس صفرًا.
 

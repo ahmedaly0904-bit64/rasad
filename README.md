@@ -40,8 +40,8 @@ print(report.summary())
 report.plot().write_html("divergence.html")
 ```
 
-You get, for every output: mean, standard deviation, a 90% interval, and a verdict —
-**robust**, **wobbly**, or **fragile** — plus a curve showing how far the runs drift
+You get, for every output: mean, standard deviation, a 90% interval, and a variability class —
+**low**, **moderate**, or **high** — plus a curve showing how far the runs drift
 apart over time.
 
 ---
@@ -54,13 +54,13 @@ Applied to [Omran](https://github.com/ahmedaly0904-bit64/Omran), an agent-based 
 Ibn Khaldun's theory of *asabiyyah*, **without modifying a line of it**:
 
 ```
-final_total_population: mean 4,649.39 | cv 0.2841 | p05-p95 [2,704.75, 6,774.30] | fragile
-survivors:              mean 1.14     | cv 0.3059 | p05-p95 [1.00, 2.00]        | fragile
-total_wars:             mean 13.44    | cv 0.3986 | p05-p95 [6.00, 22.10]       | fragile
-total_famines:          mean 0.00     | cv 0.0000 | p05-p95 [0.00, 0.00]        | robust
+final_total_population: mean 4,649.39 | cv 0.2841 | p05-p95 [2,704.75, 6,774.30] | high
+survivors:              mean 1.14     | cv 0.3059 | p05-p95 [1.00, 2.00]        | high
+total_wars:             mean 13.44    | cv 0.3986 | p05-p95 [6.00, 22.10]       | high
+total_famines:          mean 0.00     | cv 0.0000 | p05-p95 [0.00, 0.00]        | low
 ```
 
-Nothing numeric in the model was robust. Worse, the measurement exposed something the author
+No numeric output of the model had low variability. Worse, the measurement exposed something the author
 did not know: **the same seed produced different results in different processes.**
 
 Six runs with seed `1`, thirty simulated years:
@@ -82,9 +82,9 @@ On a [SimPy](https://simpy.readthedocs.io) machine-shop simulation
 
 | Output | cv | Verdict |
 |---|---|---|
-| total parts produced | 0.014 | **robust** |
-| best machine · worst machine | 0.017 | **robust** |
-| **gap between best and worst** | **0.31** | **fragile** |
+| total parts produced | 0.014 | **low** |
+| best machine · worst machine | 0.017 | **low** |
+| **gap between best and worst** | **0.31** | **high** |
 
 The shop's total output is stable. The gap between machines is pure noise. Anyone looking at
 one run and saying *"machine 7 is underperforming, investigate it"* is chasing a random seed.
@@ -97,9 +97,9 @@ one run and saying *"machine 7 is underperforming, investigate it"* is chasing a
 
 | Framework | Models | Result |
 |---|---|---|
-| [Mesa](https://github.com/projectmesa/mesa) | Schelling, WolfSheep, Boltzmann | works; WolfSheep's sheep population is fragile (cv 2.95 — usually extinct, occasionally not) |
+| [Mesa](https://github.com/projectmesa/mesa) | Schelling, WolfSheep, Boltzmann | works; WolfSheep's sheep population has high variability (cv 2.95 — usually extinct, occasionally not) |
 | [SimPy](https://simpy.readthedocs.io) | machine shop | works; see above |
-| [EoN](https://epidemicsonnetworks.readthedocs.io) | SIR on a network | works; epidemic duration is fragile (7.5 → 14.7) |
+| [EoN](https://epidemicsonnetworks.readthedocs.io) | SIR on a network | works; epidemic duration has high variability (7.5 → 14.7) |
 | [Omran](https://github.com/ahmedaly0904-bit64/Omran) | asabiyyah model | works; see above |
 
 Examples: [`examples/`](examples/)
@@ -110,22 +110,22 @@ and that Rasad's own pipeline is deterministic.
 
 ---
 
-## The verdict is a convention. The numbers are the result.
+## The class is a convention. The numbers are the result.
 
 The default cutoffs — 0.05 and 0.20 — **are a choice, not a theory**. An output at cv 0.21
-reads *fragile*; raise the cutoff to 0.25 and the same data reads *wobbly*.
+reads *high*; raise the cutoff to 0.25 and the same data reads *moderate*.
 
 So every report prints the thresholds it used and labels them as a convention:
 
 ```
-thresholds (a convention, not a rule): robust < 0.0500 <= wobbly <= 0.2000 < fragile
+thresholds (a convention, not a rule): low < 0.0500 <= moderate <= 0.2000 < high
 ```
 
 And they belong to the caller:
 
 ```python
 rasad.measure(run, params={}, runs=100,
-              thresholds={"robust": 0.01, "wobbly": 0.05})
+              thresholds={"low": 0.01, "moderate": 0.05})
 ```
 
 **The real result is the interval.** `p05-p95 [7.46, 14.74]` says the duration may double,
@@ -172,15 +172,15 @@ have produced plausible, meaningless numbers.
 تشغيلة واحدة؟ يجيب رَصَد عنهما بالقياس لا بالتقدير.
 
 يوصّف المستخدم محاكاته بدالةٍ واحدة تستقبل المعاملات والبذرة وترجّع قاموس مخرجات. يشغّلها
-رَصَد مرارًا ببذورٍ مختلفة، ثم يعرض لكل مخرَج متوسطه وانحرافه ومدى تسعين بالمئة وحكمًا —
-**robust** أو **wobbly** أو **fragile** — مع منحنى يبيّن اتساع التباعد بين التشغيلات عبر الزمن.
+رَصَد مرارًا ببذورٍ مختلفة، ثم يعرض لكل مخرَج متوسطه وانحرافه ومدى تسعين بالمئة وتصنيفًا لتغايره —
+**low** أو **moderate** أو **high** — مع منحنى يبيّن اتساع التباعد بين التشغيلات عبر الزمن.
 
 طُبِّق على أربعة مشاريع لم يُكتب لأجلها، فكشف في أحدها — محاكاة لنظرية العصبية عند ابن خلدون —
 أنها **لا تعيد إنتاج نتائجها بالبذرة نفسها**: تشغيلتان متطابقتان تفترقان عند السنة العشرين
 بفارق فردٍ واحد، يصير مئاتٍ بحلول السنة المئة. وهذا انتشار الخطأ في صورته المقيسة.
 
 وحدود التصنيف الافتراضية اصطلاحٌ لا قاعدة، ولذلك يعلنها كل تقرير ويتركها بيد المستخدم.
-**النتيجة الحقيقية هي المدى**، لا الكلمة التي تعلوه.
+**النتيجة الحقيقية هي المدى**، لا التصنيف الذي يعلوه.
 
 ---
 
@@ -204,7 +204,7 @@ What the gates actually caught: a dead condition in a type check, a deprecated i
 missing return annotation, unreadable number formatting. **No logic error got through** —
 credit to the tests, not to the model.
 
-And what none of them caught: an output that was constantly zero was classified *fragile*
+And what none of them caught: an output that was constantly zero was classified as *high* variability
 when it was the most stable number in the report. Neither the reference models nor the review
 found it — **the real data did, on the first run against Omran.**
 

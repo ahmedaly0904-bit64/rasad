@@ -1,7 +1,7 @@
 """Rasad on SimPy — discrete-event simulation, a completely different architecture from Mesa.
 
 A machine shop: each machine produces parts, breaks down at random times, and
-waits its turn at a single repairman. The robustness question: how many parts
+waits its turn at a single repairman. The variability question: how many parts
 does the shop produce, and is that number a property of the system or of the
 seed?
 

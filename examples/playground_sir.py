@@ -93,6 +93,6 @@ print(report_weak.summary())
 #
 #   • Change tau or gamma above
 #   • Add a new output in return — for example "never_infected": S[-1]
-#   • Change runs from 50 to 200 and see whether the verdicts hold
+#   • Change runs from 50 to 200 and see whether the variability labels hold
 #   • Change the community size in barabasi_albert_graph
 # ═════════════════════════════════════════════════════════

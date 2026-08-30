@@ -15,7 +15,7 @@ import numpy as np
 # project's authors, not a derived or theoretical result: a caller may
 # pass their own thresholds to ``classify`` and ``rasad.measure``, in
 # which case these defaults are ignored.
-THRESHOLDS: dict[str, float] = {"robust": 0.05, "wobbly": 0.20}
+THRESHOLDS: dict[str, float] = {"low": 0.05, "moderate": 0.20}
 
 
 def summarize(values: Sequence[float]) -> dict[str, float | int]:
@@ -48,7 +48,7 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     std = float(arr.std(ddof=1))
     # The order of these checks is deliberate: zero spread means a fully
     # determined value whatever the mean. Without this, an output constantly
-    # at zero would be classified "fragile" when it is the most stable one
+    # at zero would be classified "high" when it is the most stable one
     # there is.
     if std == 0.0:
         cv = 0.0
@@ -81,9 +81,9 @@ def validate_thresholds(thresholds: dict[str, float]) -> dict[str, float]:
     Parameters
     ----------
     thresholds
-        A dict with exactly the keys ``robust`` and ``wobbly``. Both
-        values must be finite numbers greater than 0, and ``robust``
-        must be strictly below ``wobbly``.
+        A dict with exactly the keys ``low`` and ``moderate``. Both
+        values must be finite numbers greater than 0, and ``low``
+        must be strictly below ``moderate``.
 
     Returns
     -------
@@ -98,22 +98,22 @@ def validate_thresholds(thresholds: dict[str, float]) -> dict[str, float]:
         values do not satisfy the rules above.
     """
     keys = set(thresholds)
-    if keys != {"robust", "wobbly"}:
+    if keys != {"low", "moderate"}:
         raise ValueError(
-            f"thresholds must have exactly the keys 'robust' and 'wobbly', got {sorted(keys)}"
+            f"thresholds must have exactly the keys 'low' and 'moderate', got {sorted(keys)}"
         )
-    robust = thresholds["robust"]
-    wobbly = thresholds["wobbly"]
-    for name, value in (("robust", robust), ("wobbly", wobbly)):
+    low = thresholds["low"]
+    moderate = thresholds["moderate"]
+    for name, value in (("low", low), ("moderate", moderate)):
         if not (math.isfinite(value) and value > 0):
             raise ValueError(f"{name} threshold must be a finite positive number, got {value!r}")
-    if not robust < wobbly:
-        raise ValueError("robust must be below wobbly")
-    return {"robust": float(robust), "wobbly": float(wobbly)}
+    if not low < moderate:
+        raise ValueError("low must be below moderate")
+    return {"low": float(low), "moderate": float(moderate)}
 
 
 def classify(cv: float, thresholds: dict[str, float] | None = None) -> str:
-    """Label a coefficient of variation by its robustness cutoff.
+    """Label a coefficient of variation by its variability cutoff.
 
     Parameters
     ----------
@@ -127,8 +127,8 @@ def classify(cv: float, thresholds: dict[str, float] | None = None) -> str:
     Returns
     -------
     str
-        ``"robust"`` below the robust threshold, ``"wobbly"`` up to and
-        including the wobbly threshold, ``"fragile"`` beyond it.
+        ``"low"`` below the low threshold, ``"moderate"`` up to and
+        including the moderate threshold, ``"high"`` beyond it.
     """
     # kept as if/else rather than a ternary: the two branches do different
     # things — one picks a default, the other validates untrusted input.
@@ -136,11 +136,11 @@ def classify(cv: float, thresholds: dict[str, float] | None = None) -> str:
         thresholds = THRESHOLDS
     else:
         thresholds = validate_thresholds(thresholds)
-    if cv < thresholds["robust"]:
-        return "robust"
-    if cv <= thresholds["wobbly"]:
-        return "wobbly"
-    return "fragile"
+    if cv < thresholds["low"]:
+        return "low"
+    if cv <= thresholds["moderate"]:
+        return "moderate"
+    return "high"
 
 
 def divergence(series: Sequence[Sequence[float]]) -> list[float]:

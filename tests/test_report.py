@@ -9,20 +9,20 @@ from reference_models import (
 import rasad
 
 
-def test_constant_model_is_robust():
+def test_constant_model_has_low_variability():
     report = rasad.measure(constant_model, params={}, runs=20)
     assert report.scalars["value"]["std"] == 0.0
-    assert report.scalars["value"]["verdict"] == "robust"
+    assert report.scalars["value"]["variability"] == "low"
 
 
-def test_wide_normal_model_is_fragile():
+def test_wide_normal_model_has_high_variability():
     report = rasad.measure(normal_model, params={"mu": 1.0, "sigma": 5.0}, runs=200)
-    assert report.scalars["value"]["verdict"] == "fragile"
+    assert report.scalars["value"]["variability"] == "high"
 
 
-def test_narrow_normal_model_is_robust():
+def test_narrow_normal_model_has_low_variability():
     report = rasad.measure(normal_model, params={"mu": 100.0, "sigma": 0.01}, runs=200)
-    assert report.scalars["value"]["verdict"] == "robust"
+    assert report.scalars["value"]["variability"] == "low"
 
 
 def test_flat_series_never_diverges():
@@ -54,10 +54,10 @@ def test_a_different_base_seed_changes_the_result():
     assert a.scalars != b.scalars
 
 
-def test_summary_names_every_output_and_its_verdict():
+def test_summary_names_every_output_and_its_variability():
     text = rasad.measure(constant_model, params={}, runs=20).summary()
     assert "value" in text
-    assert "robust" in text
+    assert "low" in text
     assert "20" in text
 
 
@@ -86,7 +86,7 @@ def test_plot_raises_when_there_are_no_series():
         report.plot()
 
 
-def test_custom_thresholds_change_the_verdict():
+def test_custom_thresholds_change_the_variability():
     lenient = rasad.measure(
         normal_model, params={"mu": 100.0, "sigma": 3.0}, runs=200
     )
@@ -94,15 +94,15 @@ def test_custom_thresholds_change_the_verdict():
         normal_model,
         params={"mu": 100.0, "sigma": 3.0},
         runs=200,
-        thresholds={"robust": 0.001, "wobbly": 0.005},
+        thresholds={"low": 0.001, "moderate": 0.005},
     )
-    assert lenient.scalars["value"]["verdict"] == "robust"
-    assert strict.scalars["value"]["verdict"] == "fragile"
+    assert lenient.scalars["value"]["variability"] == "low"
+    assert strict.scalars["value"]["variability"] == "high"
 
 
 def test_report_records_the_thresholds_it_used():
     report = rasad.measure(constant_model, params={}, runs=10)
-    assert report.thresholds == {"robust": 0.05, "wobbly": 0.20}
+    assert report.thresholds == {"low": 0.05, "moderate": 0.20}
 
 
 def test_summary_states_the_thresholds_and_calls_them_a_convention():
@@ -120,6 +120,6 @@ def test_bad_thresholds_fail_before_any_run():
 
     with pytest.raises(ValueError):
         rasad.measure(
-            counting_model, params={}, runs=50, thresholds={"robust": 0.9, "wobbly": 0.1}
+            counting_model, params={}, runs=50, thresholds={"low": 0.9, "moderate": 0.1}
         )
     assert calls == []

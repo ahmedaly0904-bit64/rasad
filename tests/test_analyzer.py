@@ -46,12 +46,12 @@ def test_requires_at_least_two_values():
 
 
 def test_classify_boundaries():
-    assert classify(0.0) == "robust"
-    assert classify(0.049) == "robust"
-    assert classify(THRESHOLDS["robust"]) == "wobbly"
-    assert classify(0.20) == "wobbly"
-    assert classify(0.201) == "fragile"
-    assert classify(math.inf) == "fragile"
+    assert classify(0.0) == "low"
+    assert classify(0.049) == "low"
+    assert classify(THRESHOLDS["low"]) == "moderate"
+    assert classify(0.20) == "moderate"
+    assert classify(0.201) == "high"
+    assert classify(math.inf) == "high"
 
 
 def test_identical_series_never_diverge():
@@ -83,58 +83,58 @@ def test_cv_is_zero_when_the_value_never_varies_at_zero():
     """A value constant at zero is fully determined — there is no spread at all.
 
     Discovered on real data: the Omran total_famines output was zero in every
-    run, giving cv = inf and classifying it "fragile" when it was the most
+    run, giving cv = inf and classifying it "high" when it was the most
     stable value in the report.
     """
     result = summarize([0.0] * 10)
     assert result["std"] == 0.0
     assert result["cv"] == 0.0
-    assert classify(result["cv"]) == "robust"
+    assert classify(result["cv"]) == "low"
 
 
 def test_classify_accepts_custom_thresholds():
-    strict = {"robust": 0.01, "wobbly": 0.05}
-    assert classify(0.02) == "robust"
-    assert classify(0.02, strict) == "wobbly"
+    strict = {"low": 0.01, "moderate": 0.05}
+    assert classify(0.02) == "low"
+    assert classify(0.02, strict) == "moderate"
 
 
 def test_validate_thresholds_returns_plain_floats():
     from rasad.analyzer import validate_thresholds
 
-    out = validate_thresholds({"robust": 0.1, "wobbly": 0.3})
-    assert out == {"robust": 0.1, "wobbly": 0.3}
+    out = validate_thresholds({"low": 0.1, "moderate": 0.3})
+    assert out == {"low": 0.1, "moderate": 0.3}
     assert all(type(v) is float for v in out.values())
 
 
 def test_validate_thresholds_copies_so_the_caller_cannot_mutate_it():
     from rasad.analyzer import validate_thresholds
 
-    original = {"robust": 0.1, "wobbly": 0.3}
+    original = {"low": 0.1, "moderate": 0.3}
     out = validate_thresholds(original)
-    original["robust"] = 999.0
-    assert out["robust"] == 0.1
+    original["low"] = 999.0
+    assert out["low"] == 0.1
 
 
 def test_validate_thresholds_rejects_wrong_keys():
     from rasad.analyzer import validate_thresholds
 
     with pytest.raises(ValueError, match="keys"):
-        validate_thresholds({"robust": 0.1})
+        validate_thresholds({"low": 0.1})
     with pytest.raises(ValueError, match="keys"):
-        validate_thresholds({"robust": 0.1, "wobbly": 0.3, "extra": 1.0})
+        validate_thresholds({"low": 0.1, "moderate": 0.3, "extra": 1.0})
 
 
 def test_validate_thresholds_rejects_non_positive_values():
     from rasad.analyzer import validate_thresholds
 
     with pytest.raises(ValueError, match="positive"):
-        validate_thresholds({"robust": 0.0, "wobbly": 0.3})
+        validate_thresholds({"low": 0.0, "moderate": 0.3})
     with pytest.raises(ValueError, match="positive"):
-        validate_thresholds({"robust": -0.1, "wobbly": 0.3})
+        validate_thresholds({"low": -0.1, "moderate": 0.3})
 
 
 def test_validate_thresholds_rejects_an_inverted_order():
     from rasad.analyzer import validate_thresholds
 
-    with pytest.raises(ValueError, match="robust must be below wobbly"):
-        validate_thresholds({"robust": 0.5, "wobbly": 0.2})
+    with pytest.raises(ValueError, match="low must be below moderate"):
+        validate_thresholds({"low": 0.5, "moderate": 0.2})

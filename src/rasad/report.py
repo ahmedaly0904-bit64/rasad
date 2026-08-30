@@ -37,7 +37,7 @@ class Report:
     ----------
     scalars
         Output name to the summary dict from :func:`rasad.analyzer.summarize`
-        plus a ``verdict`` key holding the string from
+        plus a ``variability`` key holding the string from
         :func:`rasad.analyzer.classify`.
     series
         Output name to the divergence curve from
@@ -69,14 +69,14 @@ class Report:
         str
             A header with the run count, one row per scalar output
             (name, mean, standard deviation, coefficient of variation,
-            p05-p95 interval, verdict) and, when present, one
+            p05-p95 interval, variability) and, when present, one
             line per series showing how the divergence grew.
         """
         lines = [f"Rasad report of {self.runs} runs"]
         lines.append(
-            f"thresholds (a convention, not a rule): robust < "
-            f"{_fmt_ratio(self.thresholds['robust'])} <= wobbly <= "
-            f"{_fmt_ratio(self.thresholds['wobbly'])} < fragile"
+            f"thresholds (a convention, not a rule): low < "
+            f"{_fmt_ratio(self.thresholds['low'])} <= moderate <= "
+            f"{_fmt_ratio(self.thresholds['moderate'])} < high"
         )
 
         if self.scalars:
@@ -87,7 +87,7 @@ class Report:
                     f"std {_fmt(stats['std'])} | "
                     f"cv {_fmt_ratio(stats['cv'])} | "
                     f"p05-p95 [{_fmt(stats['p05'])}, {_fmt(stats['p95'])}] | "
-                    f"verdict: {stats['verdict']}"
+                    f"variability: {stats['variability']}"
                 )
 
         if self.series:
