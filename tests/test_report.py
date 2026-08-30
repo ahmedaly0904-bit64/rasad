@@ -57,7 +57,7 @@ def test_a_different_base_seed_changes_the_result():
 def test_summary_names_every_output_and_its_verdict():
     text = rasad.measure(constant_model, params={}, runs=20).summary()
     assert "value" in text
-    assert "صامد" in text
+    assert "robust" in text
     assert "20" in text
 
 
@@ -107,7 +107,7 @@ def test_report_records_the_thresholds_it_used():
 
 def test_summary_states_the_thresholds_and_calls_them_a_convention():
     text = rasad.measure(constant_model, params={}, runs=10).summary()
-    assert "اصطلاح" in text
+    assert "convention" in text
     assert "0.0500" in text or "0.05" in text
 
 

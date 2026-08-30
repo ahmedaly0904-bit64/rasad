@@ -1,7 +1,8 @@
-"""رَصَد على نماذج Mesa — إطار محاكاة خارجي لم يُكتب لأجل رَصَد.
+"""Rasad on Mesa models — an external simulation framework not written for Rasad.
 
-يوضح هذا المثال أن الواجهة تعمل على محاكاة لم تُصمَّم لهذه الأداة: يكفي
-غلافٌ يستقبل ``(params, seed)`` ويرجّع قاموسًا.
+This example shows that the interface works on a simulation that was not
+designed for this tool: a wrapper that accepts ``(params, seed)`` and
+returns a dict is enough.
 
     pip install -e ".[examples]"
     python examples/mesa_models.py
@@ -19,21 +20,22 @@ RUNS = 25
 
 
 def make_run(model_cls, scenario_cls, reporters: dict[str, str]):
-    """يبني دالة ``run`` مطابقة لواجهة رَصَد فوق أي نموذج Mesa.
+    """Build a ``run`` function matching the Rasad interface on top of any Mesa model.
 
     Parameters
     ----------
     model_cls
-        صنف النموذج في Mesa.
+        The model class in Mesa.
     scenario_cls
-        صنف السيناريو المقابل، يستقبل البذرة عبر ``rng``.
+        The matching scenario class, which receives the seed via ``rng``.
     reporters
-        اسم المخرَج في التقرير، مقابل اسم العمود عند جامع البيانات.
+        The output name in the report, mapped to the column name in the
+        data collector.
 
     Returns
     -------
     Callable[[dict, int], dict]
-        دالة تشغيل واحدة، ترجّع القيم النهائية ومسارًا زمنيًا.
+        A single run function, returning the final values and a time series.
     """
 
     def run(params: dict, seed: int) -> dict:
@@ -43,7 +45,7 @@ def make_run(model_cls, scenario_cls, reporters: dict[str, str]):
 
         frame = model.datacollector.get_model_vars_dataframe()
         out = {name: frame[column].iloc[-1] for name, column in reporters.items()}
-        # مصفوفة numpy عمدًا: هكذا تُخرج المحاكاة الحقيقية سلاسلها
+        # A numpy array on purpose: that is how a real simulation returns its series
         out["trace"] = frame[next(iter(reporters.values()))].to_numpy()
         return out
 
@@ -51,13 +53,13 @@ def make_run(model_cls, scenario_cls, reporters: dict[str, str]):
 
 
 CASES = {
-    "Schelling — الفصل السكني": make_run(
+    "Schelling — residential segregation": make_run(
         Schelling, SchellingScenario, {"happy": "happy", "minority_pct": "minority_pct"}
     ),
-    "WolfSheep — الافتراس": make_run(
+    "WolfSheep — predation": make_run(
         WolfSheep, WolfSheepScenario, {"wolves": "Wolves", "sheep": "Sheep"}
     ),
-    "Boltzmann — توزيع الثروة": make_run(
+    "Boltzmann — wealth distribution": make_run(
         BoltzmannWealth, BoltzmannScenario, {"gini": "Gini"}
     ),
 }

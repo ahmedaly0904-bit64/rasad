@@ -103,13 +103,13 @@ def test_still_rejects_a_python_boolean():
 
 
 def test_rejects_a_list_of_python_booleans():
-    """قائمة بولين تُبلع كأصفار وآحاد فتنتج إحصاءً بلا معنى — نفس فخ القيمة المفردة."""
+    """A list of booleans is swallowed as ones and zeros, producing meaningless statistics — the same trap as a single boolean value."""
     with pytest.raises(TypeError, match="unsupported output"):
         split_outputs({"alive": [True, False, True]})
 
 
 def test_rejects_a_list_of_strings_with_a_clear_message():
-    """بدون فحص العناصر يخرج ValueError مربك من float() بدل رسالة مفهومة."""
+    """Without the element check, float() would raise a confusing ValueError instead of a clear message."""
     with pytest.raises(TypeError, match="unsupported output"):
         split_outputs({"names": ["a", "b"]})
 

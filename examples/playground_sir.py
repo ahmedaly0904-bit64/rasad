@@ -1,7 +1,7 @@
-"""ملعب تجارب — رَصَد على محاكاة وباء SIR.
+"""A sandbox — Rasad on an SIR epidemic simulation.
 
-شغّله زي ما هو الأول، وبعدين غيّر فيه.
-كل قسم مستقل — تقدر تعلّق اللي مش عايزه.
+Run it as is first, then change it.
+Each section is independent — you can comment out what you don't want.
 """
 
 import EoN
@@ -11,46 +11,46 @@ import numpy as np
 import rasad
 
 # ═════════════════════════════════════════════════════════
-# المجتمع — ٥٠٠ شخص، شبكة علاقات ثابتة في كل التشغيلات
+# The community — 500 people, a relationship network fixed in every run
 # ═════════════════════════════════════════════════════════
 G = nx.barabasi_albert_graph(500, 3, seed=1)
 
 
 # ═════════════════════════════════════════════════════════
-# ١ — وباء واحد بإيدك
+# 1 — one epidemic in your hands
 # ═════════════════════════════════════════════════════════
 print("=" * 55)
-print("١ — وباء واحد، بذرة 1")
+print("1 — one epidemic, seed 1")
 print("=" * 55)
 
 t, S, I, R = EoN.fast_SIR(G, tau=0.3, gamma=1.0, rho=0.02,
                           rng=np.random.default_rng(1))
 
-print(f"  ذروة المصابين:      {I.max()}")
-print(f"  اتصاب في الآخر:     {R[-1]} من {G.number_of_nodes()}")
-print(f"  مدة الوباء:         {t[-1]:.2f}")
+print(f"  peak infected:       {I.max()}")
+print(f"  infected in the end: {R[-1]} of {G.number_of_nodes()}")
+print(f"  epidemic duration:   {t[-1]:.2f}")
 
 
 # ═════════════════════════════════════════════════════════
-# ٢ — نفس كل حاجة، بذرة مختلفة
+# 2 — everything the same, a different seed
 # ═════════════════════════════════════════════════════════
 print("\n" + "=" * 55)
-print("٢ — نفس المرض ونفس المجتمع، بذور مختلفة")
+print("2 — the same disease and community, different seeds")
 print("=" * 55)
 
 for seed in (1, 2, 3, 4, 5):
     t, S, I, R = EoN.fast_SIR(G, tau=0.3, gamma=1.0, rho=0.02,
                               rng=np.random.default_rng(seed))
-    print(f"  بذرة {seed}:  ذروة {I.max():3d}  |  مصابين {R[-1]:3d}  |  مدة {t[-1]:5.2f}")
+    print(f"  seed {seed}:  peak {I.max():3d}  |  infected {R[-1]:3d}  |  duration {t[-1]:5.2f}")
 
-print("\n  ← أنهي واحدة الصح؟ ولا واحدة. عشان كده رَصَد موجود.")
+print("\n  ← is one of them the truth? none. that's why Rasad exists.")
 
 
 # ═════════════════════════════════════════════════════════
-# ٣ — لفّ المحاكاة في دالة بالشكل اللي رَصَد بيفهمه
+# 3 — wrap the simulation in a function in the shape Rasad understands
 # ═════════════════════════════════════════════════════════
 def run(params, seed):
-    """تشغيلة واحدة. البذرة جاية من بره، ونرجّع قاموس بالأرقام."""
+    """One run. The seed comes from outside, and we return a dict of numbers."""
     t, S, I, R = EoN.fast_SIR(
         G,
         tau=params["tau"],
@@ -66,10 +66,10 @@ def run(params, seed):
 
 
 # ═════════════════════════════════════════════════════════
-# ٤ — شغّل رَصَد
+# 4 — run Rasad
 # ═════════════════════════════════════════════════════════
 print("\n" + "=" * 55)
-print("٤ — رَصَد: ٥٠ وباء، مرض قوي (tau=0.3)")
+print("4 — Rasad: 50 epidemics, a strong disease (tau=0.3)")
 print("=" * 55)
 
 report = rasad.measure(run, params={"tau": 0.3, "gamma": 1.0}, runs=50)
@@ -77,11 +77,11 @@ print(report.summary())
 
 
 # ═════════════════════════════════════════════════════════
-# ٥ — نفس الحاجة بمرض أضعف
-#     توقّع الفرق قبل ما تشغّل
+# 5 — the same thing with a weaker disease
+#     predict the difference before you run it
 # ═════════════════════════════════════════════════════════
 print("\n" + "=" * 55)
-print("٥ — مرض أضعف (tau=0.12)")
+print("5 — a weaker disease (tau=0.12)")
 print("=" * 55)
 
 report_weak = rasad.measure(run, params={"tau": 0.12, "gamma": 1.0}, runs=50)
@@ -89,10 +89,10 @@ print(report_weak.summary())
 
 
 # ═════════════════════════════════════════════════════════
-# ✍️  جرّب إنت:
+# ✍️  Try it yourself:
 #
-#   • غيّر tau أو gamma فوق
-#   • ضيف مخرَج جديد في return — مثلاً "never_infected": S[-1]
-#   • غيّر runs من 50 لـ 200 وشوف الأحكام بتثبت ولا لأ
-#   • غيّر حجم المجتمع في barabasi_albert_graph
+#   • Change tau or gamma above
+#   • Add a new output in return — for example "never_infected": S[-1]
+#   • Change runs from 50 to 200 and see whether the verdicts hold
+#   • Change the community size in barabasi_albert_graph
 # ═════════════════════════════════════════════════════════

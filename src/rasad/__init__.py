@@ -1,4 +1,4 @@
-"""رَصَد — measuring the robustness of simulation results."""
+"""Rasad — measuring the robustness of simulation results."""
 
 from collections.abc import Callable
 from typing import Any

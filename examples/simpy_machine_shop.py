@@ -1,10 +1,11 @@
-"""رَصَد على SimPy — محاكاة أحداث متقطعة، معمارٌ مختلف تمامًا عن Mesa.
+"""Rasad on SimPy — discrete-event simulation, a completely different architecture from Mesa.
 
-ورشة آلات: كل آلة تنتج قطعًا، وتتعطل في أوقات عشوائية، وتنتظر دورها عند
-عامل صيانة واحد. سؤال الصلابة: كم قطعة تنتج الورشة، وهل الرقم خاصية في
-النظام أم في البذرة؟
+A machine shop: each machine produces parts, breaks down at random times, and
+waits its turn at a single repairman. The robustness question: how many parts
+does the shop produce, and is that number a property of the system or of the
+seed?
 
-المثال مبني على نموذج «ورشة الآلات» المعروف في توثيق SimPy.
+The example is based on the well-known "machine shop" model in the SimPy docs.
 
     pip install -e ".[examples]"
     python examples/simpy_machine_shop.py
@@ -17,15 +18,15 @@ import simpy
 
 import rasad
 
-PT_MEAN, PT_SIGMA = 10.0, 2.0   # زمن إنتاج القطعة الواحدة
-MTTF = 300.0                    # متوسط الزمن حتى العطل
-REPAIR_TIME = 30.0              # زمن الإصلاح
+PT_MEAN, PT_SIGMA = 10.0, 2.0   # production time of one part
+MTTF = 300.0                    # mean time to failure
+REPAIR_TIME = 30.0              # repair time
 WEEKS = 4
-SIM_TIME = WEEKS * 7 * 24 * 60  # بالدقائق
+SIM_TIME = WEEKS * 7 * 24 * 60  # in minutes
 
 
 class Machine:
-    """آلة تنتج قطعًا وتتعطل ثم تُصلَح."""
+    """A machine that produces parts, breaks down, then gets repaired."""
 
     def __init__(self, env, rng, repairman):
         self.env = env
@@ -60,7 +61,7 @@ class Machine:
 
 
 def run(params: dict, seed: int) -> dict:
-    """تشغيلة واحدة للورشة — واجهة رَصَد."""
+    """One run of the workshop — the Rasad interface."""
     rng = random.Random(seed)
     env = simpy.Environment()
     repairman = simpy.PreemptiveResource(env, capacity=1)

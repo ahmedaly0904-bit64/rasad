@@ -112,8 +112,9 @@ def split_outputs(out: dict[str, Any]) -> tuple[dict[str, float], dict[str, list
         ):
             scalars[key] = float(value)
         elif isinstance(value, (list, tuple)):
-            # كل عنصر يُفحص: قائمة بولين أو نصوص تمر صامتة لولا هذا،
-            # فتنتج إحصاءً على أرقام لا تعني شيئًا.
+            # Every element is checked: a list of booleans or strings would
+            # otherwise pass silently and produce statistics over numbers
+            # that mean nothing.
             bad = next(
                 ((i, v) for i, v in enumerate(value) if not _is_number(v)), None
             )

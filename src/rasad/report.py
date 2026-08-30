@@ -11,12 +11,6 @@ from typing import Any
 
 import plotly.graph_objects as go
 
-ARABIC_VERDICT = {
-    "robust": "صامد",
-    "wobbly": "متذبذب",
-    "fragile": "هش",
-}
-
 # Fixed precision so two runs with the same seeds render byte-identically.
 _VALUE_DECIMALS = 2
 _RATIO_DECIMALS = 4
@@ -75,14 +69,14 @@ class Report:
         str
             A header with the run count, one row per scalar output
             (name, mean, standard deviation, coefficient of variation,
-            p05-p95 interval, Arabic verdict) and, when present, one
+            p05-p95 interval, verdict) and, when present, one
             line per series showing how the divergence grew.
         """
         lines = [f"Rasad report of {self.runs} runs"]
         lines.append(
-            f"حدود التصنيف (اصطلاح لا قاعدة): صامد < "
-            f"{_fmt_ratio(self.thresholds['robust'])} ≤ متذبذب ≤ "
-            f"{_fmt_ratio(self.thresholds['wobbly'])} < هش"
+            f"thresholds (a convention, not a rule): robust < "
+            f"{_fmt_ratio(self.thresholds['robust'])} <= wobbly <= "
+            f"{_fmt_ratio(self.thresholds['wobbly'])} < fragile"
         )
 
         if self.scalars:
@@ -93,7 +87,7 @@ class Report:
                     f"std {_fmt(stats['std'])} | "
                     f"cv {_fmt_ratio(stats['cv'])} | "
                     f"p05-p95 [{_fmt(stats['p05'])}, {_fmt(stats['p95'])}] | "
-                    f"verdict: {ARABIC_VERDICT[stats['verdict']]}"
+                    f"verdict: {stats['verdict']}"
                 )
 
         if self.series:
@@ -136,7 +130,7 @@ class Report:
 
         fig.update_layout(
             title=f"Rasad report of {self.runs} runs",
-            xaxis_title="خطوة الزمن",
-            yaxis_title="الانحراف المعياري بين الجولات",
+            xaxis_title="time step",
+            yaxis_title="standard deviation between runs",
         )
         return fig

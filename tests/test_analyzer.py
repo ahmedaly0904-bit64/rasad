@@ -80,10 +80,11 @@ def test_divergence_needs_at_least_two_series():
 
 
 def test_cv_is_zero_when_the_value_never_varies_at_zero():
-    """قيمة ثابتة عند صفر محددة تمامًا — لا تذبذب فيها إطلاقًا.
+    """A value constant at zero is fully determined — there is no spread at all.
 
-    اكتُشف على بيانات حقيقية: مخرَج عُمران total_famines كان صفرًا في كل
-    تشغيلة، فأعطى cv = inf وصُنّف "هشًا" وهو أثبت ما في التقرير.
+    Discovered on real data: the Omran total_famines output was zero in every
+    run, giving cv = inf and classifying it "fragile" when it was the most
+    stable value in the report.
     """
     result = summarize([0.0] * 10)
     assert result["std"] == 0.0

@@ -46,8 +46,10 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     n = int(arr.size)
     mean = float(arr.mean())
     std = float(arr.std(ddof=1))
-    # ترتيب الفحص مقصود: انحراف صفر يعني قيمة محددة تمامًا مهما كان المتوسط.
-    # لولا هذا لصُنّف مخرَج ثابت عند صفر "هشًا" وهو أثبت ما يكون.
+    # The order of these checks is deliberate: zero spread means a fully
+    # determined value whatever the mean. Without this, an output constantly
+    # at zero would be classified "fragile" when it is the most stable one
+    # there is.
     if std == 0.0:
         cv = 0.0
     elif mean == 0.0:

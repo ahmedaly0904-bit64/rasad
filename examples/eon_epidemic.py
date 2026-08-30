@@ -1,6 +1,7 @@
-"""رَصَد على EoN — انتشار وباء على شبكة.
+"""Rasad on EoN — an epidemic spreading on a network.
 
-الهيكل جاهز. المطلوب منك: تقرر تقيس إيه، وتحل مشكلة اختلاف أطوال السلاسل.
+The structure is ready. Your task: decide what to measure, and solve the
+problem of unequal series lengths.
 
     .venv/bin/python examples/eon_epidemic.py
 """
@@ -11,21 +12,23 @@ import numpy as np
 
 import rasad
 
-# ——— معاملات المحاكاة ———
-NODES = 500        # عدد الأفراد في الشبكة
-TAU = 0.3          # معدل العدوى
-GAMMA = 1.0        # معدل الشفاء
-RHO = 0.02         # نسبة المصابين في البداية
+# ——— simulation parameters ———
+NODES = 500        # individuals in the network
+TAU = 0.3          # infection rate
+GAMMA = 1.0        # recovery rate
+RHO = 0.02         # initial fraction infected
 
-# الشبكة ثابتة عبر كل التشغيلات — البذرة تغيّر مسار الوباء لا بنية المجتمع
+# The network is fixed across every run — the seed changes the course of the
+# epidemic, not the structure of the community
 GRAPH = nx.barabasi_albert_graph(NODES, 3, seed=1)
 
 
 def run(params: dict, seed: int) -> dict:
-    """تشغيلة واحدة لوباء على الشبكة.
+    """One run of an epidemic on a network.
 
-    t, S, I, R كلها مصفوفات numpy بنفس الطول — لكن الطول **يختلف بين
-    التشغيلات**، لأن كل حدث عدوى أو شفاء يسجّل صفًا.
+    t, S, I, R are all numpy arrays of the same length — but the length
+    **differs between runs**, because every infection or recovery event
+    records a row.
     """
     t, S, I, R = EoN.fast_SIR(
         GRAPH,
@@ -35,8 +38,9 @@ def run(params: dict, seed: int) -> dict:
         rng=np.random.default_rng(seed),
     )
 
-    # على شبكة زمنية ثابتة: كل التشغيلات تُقاس عند نفس اللحظات،
-    # فتصبح المقارنة بينها ذات معنى. بدون هذا تختلف الأطوال ويرفض رَصَد.
+    # On a fixed time grid: every run is measured at the same instants, so
+    # comparisons between runs are meaningful. Without this the lengths differ
+    # and Rasad rejects them.
     grid = np.linspace(0.0, 15.0, 60)
     infected_on_grid = np.interp(grid, t, I)
 
@@ -56,7 +60,7 @@ def main() -> None:
 
     if report.series:
         report.plot().write_html("eon_divergence.html")
-        print("\nالرسم: eon_divergence.html")
+        print("\nPlot written to: eon_divergence.html")
 
 
 if __name__ == "__main__":
