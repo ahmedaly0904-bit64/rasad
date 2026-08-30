@@ -12,6 +12,39 @@ Rasad answers both by measurement.
 
 ---
 
+## Why this exists
+
+This tool was not designed in the abstract. It was built because another project needed it.
+
+**Omran** is a simulation of Ibn Khaldun's theory of *asabiyyah*. Ibn Khaldun (1332–1406) was
+a historian who argued in the *Muqaddimah* that civilisations rise and fall on a single
+force: **asabiyyah**, the cohesion that lets a group act as one. A group with strong
+cohesion overtakes a settled, comfortable one; then comfort erodes its own cohesion over
+generations, and it is overtaken in turn. The cycle repeats. He called the study of this
+*ʿilm al-ʿumran* — the science of human social organisation — which is where the project
+takes its name.
+
+Omran models that computationally: nations on a grid, populations that grow and starve,
+ideas that spread between neighbours like an infection, wars along contested borders. Run it
+and you get numbers — a final population, a count of wars, a year the collapse happened.
+
+The problem was that nobody knew whether those numbers meant anything.
+
+Change the random seed and they change. Was a collapse in year 240 a property of the model,
+or an accident of one run? There was no way to answer without measuring, and no tool that
+measured it — the frameworks that do sensitivity analysis are built for engineering and
+physics models, and the agent-based modelling field is repeatedly criticised for publishing
+results without error bars.
+
+So Rasad was written to answer that question, under one hard constraint: **it must not touch
+Omran.** It observes from the outside and modifies nothing, the way an instrument measures a
+specimen without altering it. That constraint shaped the architecture — and it is why Rasad
+works on any simulation, not just the one it was written for.
+
+What it found is in [`FINDINGS.md`](FINDINGS.md), and it was not what anyone expected.
+
+---
+
 ## Install
 
 ```bash
@@ -178,6 +211,29 @@ have produced plausible, meaningless numbers.
 طُبِّق على أربعة مشاريع لم يُكتب لأجلها، فكشف في أحدها — محاكاة لنظرية العصبية عند ابن خلدون —
 أنها **لا تعيد إنتاج نتائجها بالبذرة نفسها**: تشغيلتان متطابقتان تفترقان عند السنة العشرين
 بفارق فردٍ واحد، يصير مئاتٍ بحلول السنة المئة. وهذا انتشار الخطأ في صورته المقيسة.
+
+### لماذا كُتب
+
+لم تُصمَّم هذه الأداة في الفراغ، بل كُتبت لأن مشروعًا آخر احتاجها.
+
+**عُمران** محاكاةٌ لنظرية العصبية عند ابن خلدون (١٣٣٢–١٤٠٦)، الذي رأى في *المقدمة* أن الحضارات
+تنهض وتسقط بقوةٍ واحدة: **العصبية**، أي التماسك الذي يجعل الجماعة تفعل كأنها واحد. جماعةٌ
+عصبيتها قوية تغلب جماعةً مستقرةً مترفة، ثم يُفسد الترف عصبيتها هي عبر الأجيال، فتُغلَب بدورها.
+وسمّى ابن خلدون دراسة ذلك **علم العمران**، ومنه أخذ المشروع اسمه.
+
+يحاكي عُمران هذا حاسوبيًّا: دولٌ على شبكة، وسكانٌ ينمون ويجوعون، وأفكارٌ تنتقل بين الجيران
+كالعدوى، وحروبٌ على الحدود المتنازعة. تشغّله فتخرج لك أرقام — سكانٌ في النهاية، وعدد حروب،
+وسنةٌ وقع فيها الانهيار.
+
+والمشكلة أن أحدًا لم يكن يعرف: هل لهذه الأرقام معنى؟ غيّر البذرة العشوائية تتغيّر. فهل الانهيار
+في السنة ٢٤٠ خاصيةٌ في النموذج أم صدفةُ تشغيلةٍ واحدة؟ لا سبيل إلى الجواب إلا بالقياس، ولم تكن
+هناك أداةٌ تقيسه.
+
+فكُتب رَصَد لهذا السؤال، بقيدٍ واحدٍ صارم: **ألّا يمسّ عُمران**. يراقبه من خارجه ولا يعدّل فيه
+حرفًا، كما يقيس المِجهر عيّنةً دون أن يغيّرها. وهذا القيد هو الذي شكّل بنية الأداة — وهو سبب
+عملها على أي محاكاة، لا على التي كُتبت لأجلها وحدها.
+
+### التصنيف
 
 وحدود التصنيف الافتراضية اصطلاحٌ لا قاعدة، ولذلك يعلنها كل تقرير ويتركها بيد المستخدم.
 **النتيجة الحقيقية هي المدى**، لا التصنيف الذي يعلوه.
