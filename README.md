@@ -106,6 +106,10 @@ Comparing the population curve year by year located the split: the runs are **id
 nineteen years**, then diverge at year twenty by **one individual** — which becomes hundreds
 by year one hundred. That is error propagation, measured.
 
+This was then confirmed with Rasad out of the path entirely: Omran's own `main.py` carries a
+hard-coded `random.seed(42)`, and running that file directly eight times gave **four distinct
+results**.
+
 Full write-up: [`FINDINGS.md`](FINDINGS.md)
 
 ### Aggregates can be stable while their parts are noise

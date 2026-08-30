@@ -34,6 +34,25 @@ the seed alone.
    hashes and therefore memory addresses. The timing supports it: year twenty is roughly when
    national borders first touch, which is the first time that code path runs at all.
 
+### Confirmed without Rasad in the path
+
+A fair objection to the above: perhaps the adapter causes it. It does not.
+
+Omran's own `main.py` carries a hard-coded `random.seed(42)` on line 8. Running that file
+directly — Omran's entry point, Omran's seed, no Rasad code involved — eight times:
+
+```
+1,938,850  ×5
+1,991,944  ×1
+1,938,993  ×1
+1,936,239  ×1
+```
+
+**Four distinct results from eight runs of a program with a fixed seed.** The spread is about
+2.9%. This rules out the adapter as the cause and confirms the finding at its source.
+
+(Run with plotly's `show()` stubbed in a separate process, so Omran's files were not touched.)
+
 3. **Divergence grows from 0.82 to 1,320** over one hundred years. Omran's population curve
    carries information in its first decades; after that it describes its seed, not its model.
 
@@ -117,6 +136,25 @@ for pair, length in border_lengths.items():
 **لماذا «مرشّح» لا «سبب مؤكد»:** المعالجة داخل الحلقة تبدو متماثلة بين `n1` و`n2`، فلا يظهر من القراءة وحدها كيف يغيّر الترتيب النتيجة. تأكيد السبب يحتاج تتبّعًا فعليًا، لا استنتاجًا من الشكل.
 
 هذا يتقاطع مع بندين مفتوحين في دفتر ديون عُمران: `spread_idea()` المعتمد على ترتيب اللوب، و`random.shuffle(self.nations)` الذي يعدّل قائمة يملكها المستدعي.
+
+### تأكيدٌ من خارج رَصَد
+
+اعتراضٌ وجيه على ما سبق: لعلّ المحوِّل هو سبب التذبذب. وليس كذلك.
+
+يحمل ملف `main.py` في عُمران سطرًا مثبّتًا: `random.seed(42)`. وبتشغيل هذا الملف مباشرةً —
+مدخل عُمران نفسه، وبذرته هو، دون أي سطرٍ من رَصَد في الطريق — ثماني مرات:
+
+```
+1,938,850  ×5
+1,991,944  ×1
+1,938,993  ×1
+1,936,239  ×1
+```
+
+**أربع نتائج مختلفة من ثماني تشغيلات لبرنامجٍ بذرته مثبّتة في كوده.** والفارق نحو ٢٫٩٪.
+
+هذا يُخرج المحوِّل من دائرة الاتهام، ويؤكّد النتيجة عند مصدرها. (شُغِّل في عملية منفصلة مع
+تعطيل عرض الرسوم في الذاكرة، فلم يُمَسّ أي ملف في عُمران.)
 
 ### الأثر على هذا التقرير
 
