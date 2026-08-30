@@ -1,8 +1,8 @@
 import pytest
+from reference_models import constant_model, seed_echo_model
 
 from rasad.runner import run_all
 from rasad.sampler import make_plan
-from reference_models import constant_model, seed_echo_model
 
 
 def test_collects_one_output_dict_per_run():

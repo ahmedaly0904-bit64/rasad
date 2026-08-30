@@ -35,8 +35,8 @@ def test_trace_length_matches_the_requested_years():
 
 def test_runs_are_quiet():
     """Omran prints on construction; the adapter must swallow it."""
-    import io
     import contextlib
+    import io
 
     run = make_omran_run(OMRAN_SRC, years=5)
     buffer = io.StringIO()

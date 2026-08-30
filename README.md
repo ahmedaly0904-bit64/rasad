@@ -1,32 +1,36 @@
-# رَصَد — Rasad
+# Rasad · رَصَد
 
-> أداة تقيس صلابة نتائج المحاكاة: أي المخرجات حقيقة في النموذج، وأيها ضوضاء عددية.
+**Measure how much of your simulation's result is a property of the model, and how much is the random seed.**
 
-*A tool that measures how robust a stochastic simulation's results are: which outputs
-are properties of the model, and which are artifacts of the random seed.*
+Stochastic simulations are usually reported without error bars. A paper says *"the civilisation
+collapsed in year 240"* and never answers two questions:
+
+1. If the random seed changes, is it still year 240?
+2. Is this a property of the model, or an accident of one run?
+
+Rasad answers both by measurement.
 
 ---
 
-## المشكلة
+## Install
 
-المحاكاة العشوائية تُنشر نتائجها غالبًا بلا حدود خطأ. يُقال «انهارت الحضارة في السنة ٢٤٠» دون الإجابة على سؤالين:
+```bash
+pip install -e .
+```
 
-1. لو تغيّرت البذرة العشوائية، هل يظل الرقم ٢٤٠؟
-2. أهذه خاصية في النموذج، أم صدفة عددية في تشغيلة واحدة؟
+Python 3.12+ · numpy · plotly
 
-رَصَد يجيب عليهما بالقياس.
+## Use
 
-## الاستعمال
-
-يوصَّف النموذج بدالة واحدة:
+Describe your simulation as one function:
 
 ```python
 def run(params: dict, seed: int) -> dict:
-    """عدد = مخرَج نهائي.  قائمة أعداد = سلسلة زمنية."""
+    """One run. A number is a final result; a list of numbers is a time series."""
     ...
 ```
 
-ثم:
+Then:
 
 ```python
 import rasad
@@ -36,132 +40,179 @@ print(report.summary())
 report.plot().write_html("divergence.html")
 ```
 
-المخرَج: لكل نتيجة متوسطها وانحرافها ومدى ٩٠٪ وحكم — **صامد** أو **متذبذب** أو **هش** — ومنحنى يبيّن كيف يتّسع التباعد بين التشغيلات مع الزمن.
+You get, for every output: mean, standard deviation, a 90% interval, and a verdict —
+**robust**, **wobbly**, or **fragile** — plus a curve showing how far the runs drift
+apart over time.
 
-### الحكم اصطلاح، والأرقام هي النتيجة
+---
 
-حدود التصنيف الافتراضية — ٠٫٠٥ و٠٫٢٠ — **اختيار، لا نتيجة نظرية**. مخرَج بمعامل تغاير ٠٫٢١ يُقرأ «هشًا»، ولو رُفع الحد إلى ٠٫٢٥ لقُرئ «متذبذبًا»: البيانات نفسها، وحكم مختلف.
+## What it found in practice
 
-لذلك يعلن كل تقرير الحدود التي استُعملت، ويصفها بأنها اصطلاح:
+### A simulation that could not reproduce itself
+
+Applied to [Omran](https://github.com/ahmedaly0904-bit64/Omran), an agent-based model of
+Ibn Khaldun's theory of *asabiyyah*, **without modifying a line of it**:
+
+```
+final_total_population: mean 4,649.39 | cv 0.2841 | p05-p95 [2,704.75, 6,774.30] | fragile
+survivors:              mean 1.14     | cv 0.3059 | p05-p95 [1.00, 2.00]        | fragile
+total_wars:             mean 13.44    | cv 0.3986 | p05-p95 [6.00, 22.10]       | fragile
+total_famines:          mean 0.00     | cv 0.0000 | p05-p95 [0.00, 0.00]        | robust
+```
+
+Nothing numeric in the model was robust. Worse, the measurement exposed something the author
+did not know: **the same seed produced different results in different processes.**
+
+Six runs with seed `1`, thirty simulated years:
+
+```
+1428 · 1428 · 1512 · 1426 · 1426 · 1512
+```
+
+Comparing the population curve year by year located the split: the runs are **identical for
+nineteen years**, then diverge at year twenty by **one individual** — which becomes hundreds
+by year one hundred. That is error propagation, measured.
+
+Full write-up: [`FINDINGS.md`](FINDINGS.md)
+
+### Aggregates can be stable while their parts are noise
+
+On a [SimPy](https://simpy.readthedocs.io) machine-shop simulation
+([`examples/simpy_machine_shop.py`](examples/simpy_machine_shop.py)):
+
+| Output | cv | Verdict |
+|---|---|---|
+| total parts produced | 0.014 | **robust** |
+| best machine · worst machine | 0.017 | **robust** |
+| **gap between best and worst** | **0.31** | **fragile** |
+
+The shop's total output is stable. The gap between machines is pure noise. Anyone looking at
+one run and saying *"machine 7 is underperforming, investigate it"* is chasing a random seed.
+
+**Averages hide fragility.** That alone is a reason to measure what you publish.
+
+---
+
+## Verified against simulations it was not written for
+
+| Framework | Models | Result |
+|---|---|---|
+| [Mesa](https://github.com/projectmesa/mesa) | Schelling, WolfSheep, Boltzmann | works; WolfSheep's sheep population is fragile (cv 2.95 — usually extinct, occasionally not) |
+| [SimPy](https://simpy.readthedocs.io) | machine shop | works; see above |
+| [EoN](https://epidemicsonnetworks.readthedocs.io) | SIR on a network | works; epidemic duration is fragile (7.5 → 14.7) |
+| [Omran](https://github.com/ahmedaly0904-bit64/Omran) | asabiyyah model | works; see above |
+
+Examples: [`examples/`](examples/)
+
+A control worth stating: the SimPy and Mesa examples reproduce byte-identically across
+separate processes. That establishes that Omran's non-reproducibility is a bug in Omran,
+and that Rasad's own pipeline is deterministic.
+
+---
+
+## The verdict is a convention. The numbers are the result.
+
+The default cutoffs — 0.05 and 0.20 — **are a choice, not a theory**. An output at cv 0.21
+reads *fragile*; raise the cutoff to 0.25 and the same data reads *wobbly*.
+
+So every report prints the thresholds it used and labels them as a convention:
 
 ```
 حدود التصنيف (اصطلاح لا قاعدة): صامد < 0.0500 ≤ متذبذب ≤ 0.2000 < هش
 ```
 
-وهي مملوكة للمستدعي:
+And they belong to the caller:
 
 ```python
 rasad.measure(run, params={}, runs=100,
               thresholds={"robust": 0.01, "wobbly": 0.05})
 ```
 
-**النتيجة الحقيقية هي المدى** — `p05-p95 [7.46, 14.74]` يقول إن المدة قد تتضاعف، دون حاجة إلى كلمة فوقه.
+**The real result is the interval.** `p05-p95 [7.46, 14.74]` says the duration may double,
+without needing a word on top of it.
 
-## مثال حقيقي
+---
 
-طُبِّق على [عُمران](https://github.com/ahmedaly0904-bit64/Omran) — محاكاة لنظرية العصبية عند ابن خلدون — دون تعديل سطر واحد فيه:
+## Limitations
 
-```
-final_total_population: mean 4,649.39 | cv 0.2841 | p05-p95 [2,704.75, 6,774.30] | هش
-survivors:              mean 1.14     | cv 0.3059 | p05-p95 [1.00, 2.00]        | هش
-total_wars:             mean 13.44    | cv 0.3986 | p05-p95 [6.00, 22.10]       | هش
-total_famines:          mean 0.00     | cv 0.0000 | p05-p95 [0.00, 0.00]        | صامد
-```
+- **Only the seed varies.** Parameters are held fixed, so *"which parameter drives the
+  result?"* is not answered yet. Sensitivity analysis is the next version.
+- **Execution is sequential.** No parallelism.
+- **One value per output name per run.** A model whose keys change between runs is rejected.
 
-وكشف القياس أن عُمران **لا يعيد إنتاج نتائجه بالبذرة نفسها**: تشغيلتان متطابقتان تتباعدان عند السنة العشرين بفارق **فرد واحد**، يصير مئات بحلول السنة المئة.
+Accepted outputs: Python numbers, numpy scalars, 1-D numeric numpy arrays, lists and tuples.
+**Booleans are always rejected** — alone or inside a list — because an average of ones and
+zeros means nothing.
 
-التفاصيل في [`FINDINGS.md`](FINDINGS.md).
+---
 
-## يعمل على محاكاة لم تُكتب لأجله
-
-جُرّب على [Mesa](https://github.com/projectmesa/mesa)، إطار المحاكاة متعددة الوكلاء القياسي في بايثون. ثلاثة من أمثلته، بلا تعديل سطر فيها:
-
-| النموذج | النتيجة |
-|---|---|
-| **Schelling** — الفصل السكني | عدد الراضين **صامد** (تغاير ٠٫٠٢)، ونسبة الأقلية **متذبذبة** |
-| **WolfSheep** — الافتراس | الذئاب **متذبذبة**، والأغنام **هشّة** (تغاير ٢٫٩٥ — تنقرض غالبًا وتنجو أحيانًا) |
-| **Boltzmann** — توزيع الثروة | معامل جيني **متذبذب** (تغاير ٠٫٠٦) |
-
-المثال كاملًا: [`examples/mesa_models.py`](examples/mesa_models.py)
-
-وعلى [SimPy](https://simpy.readthedocs.io) — محاكاة أحداث متقطعة، معمارٌ مختلف تمامًا عن الوكلاء على شبكة. ورشة آلاتٍ تتعطل وتُصلَح ([`examples/simpy_machine_shop.py`](examples/simpy_machine_shop.py)):
-
-| المخرَج | التغاير | الحكم |
-|---|---|---|
-| إجمالي الإنتاج | ٠٫٠١٤ | **صامد** |
-| أفضل آلة · أسوأ آلة | ٠٫٠١٧ | **صامد** |
-| **الفارق بين أفضل وأسوأ آلة** | **٠٫٣١** | **هش** |
-
-الإجمالي ثابت، والفجوة بين الآلات ضوضاء خالصة. من ينظر إلى تشغيلة واحدة ويقول «الآلة رقم ٧ متأخرة، افحصوها» يطارد بذرة عشوائية.
-
-**المتوسط يخفي الهشاشة.** هذا وحده سبب كافٍ لقياس ما تنشره.
-
-ومقارنة تكشف ما تقيسه الأداة فعلًا:
-
-| النموذج | التباعد عبر الزمن |
-|---|---|
-| Schelling | ٨٫٨٤ ← **٧٫٢٧** — يضيق: النموذج يتقارب |
-| عُمران | ٠٫٨٢ ← **١٬٣٢٠** — ينفجر |
-
-### ضابط يستحق الذكر
-
-مثال SimPy يعيد إنتاج نتيجته حرفيًا — البذرة `1` تعطي `32763` في أربع عمليات منفصلة. مثال Mesa كذلك.
-
-هذا يثبت أن ما وجدناه في عُمران **بقٌّ فيه، لا طبيعةٌ في المحاكاة العشوائية**. ويثبت في الوقت نفسه أن مسار رَصَد نفسه حتمي: لو كان مصدر التذبذب في الأداة لظهر في الثلاثة.
-
-## القيود
-
-- **البذرة وحدها تتغيّر** — المعاملات ثابتة، فسؤال «أي معامل يحكم النتيجة؟» لم يُجَب بعد (تحليل الحساسية مؤجَّل للنسخة التالية).
-- **التنفيذ تسلسلي** — لا توازي.
-- **مخرَج واحد لكل اسم في كل تشغيلة** — نموذج يغيّر مفاتيحه بين التشغيلات يُرفض.
-
-المقبول من المخرجات: أعداد بايثون، وأعداد numpy القياسية، ومصفوفات numpy أحادية البُعد، والقوائم والصفوف. **القيم المنطقية مرفوضة دائمًا** — مفردةً أو داخل قائمة — لأن متوسطًا لأصفار وآحاد لا يعني شيئًا.
-
-## التطوير
+## Development
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest tests/ -v
+.venv/bin/pytest tests -v
 ```
 
-٧١ اختبارًا، تغطية ٩٧٪.
+71 tests · 97% coverage · linted with ruff
+
+The statistics are tested against models whose answers are known analytically: a constant
+must give a standard deviation of exactly zero; a random walk's divergence must grow as the
+square root of time. Those tests caught real bugs — including a collapsed axis that would
+have produced plausible, meaningless numbers.
 
 ---
 
-## كيف بُني هذا المشروع — إفصاح كامل
+## بالعربية
 
-**كُتب معظم الكود هنا بنماذج ذكاء اصطناعي، بتفويض صريح ومراجعة بشرية.** التفصيل:
+**رَصَد** أداة تقيس صلابة نتائج المحاكاة: أيُّ المخرجات خاصيةٌ في النموذج، وأيُّها أثرٌ للبذرة العشوائية.
 
-| المرحلة | المسؤول |
+تُنشر نتائج المحاكاة العشوائية غالبًا بلا حدود خطأ. يُقال «انهارت الحضارة في السنة ٢٤٠» دون
+الإجابة على سؤالين: هل يظل الرقم ٢٤٠ لو تغيّرت البذرة؟ وهل هذه خاصية في النموذج أم صدفة في
+تشغيلة واحدة؟ يجيب رَصَد عنهما بالقياس لا بالتقدير.
+
+يوصّف المستخدم محاكاته بدالةٍ واحدة تستقبل المعاملات والبذرة وترجّع قاموس مخرجات. يشغّلها
+رَصَد مرارًا ببذورٍ مختلفة، ثم يعرض لكل مخرَج متوسطه وانحرافه ومدى تسعين بالمئة وحكمًا —
+**صامد** أو **متذبذب** أو **هش** — مع منحنى يبيّن اتساع التباعد بين التشغيلات عبر الزمن.
+
+طُبِّق على أربعة مشاريع لم يُكتب لأجلها، فكشف في أحدها — محاكاة لنظرية العصبية عند ابن خلدون —
+أنها **لا تعيد إنتاج نتائجها بالبذرة نفسها**: تشغيلتان متطابقتان تفترقان عند السنة العشرين
+بفارق فردٍ واحد، يصير مئاتٍ بحلول السنة المئة. وهذا انتشار الخطأ في صورته المقيسة.
+
+وحدود التصنيف الافتراضية اصطلاحٌ لا قاعدة، ولذلك يعلنها كل تقرير ويتركها بيد المستخدم.
+**النتيجة الحقيقية هي المدى**، لا الكلمة التي تعلوه.
+
+---
+
+## How this was built — full disclosure
+
+Most of the code here was written by AI models under explicit delegation and human review.
+
+| Stage | Owner |
 |---|---|
-| المواصفة والتصميم المعماري | أحمد، بالحوار مع Claude (Opus 5) |
-| **كتابة الاختبارات** | حُدِّدت في بريف كل مهمة **قبل** التنفيذ، ومُنع المنفِّذ من تعديل حرف فيها |
-| تنفيذ الكود | DeepSeek V4 Flash، عبر `opencode` + AgentRouter — سبع مهام |
-| المراجعة والبوابات | Claude (Opus 5): قراءة كل diff، وتشغيل الاختبارات مستقلًّا عن ادعاء المنفِّذ |
-| القرار والدمج | أحمد — كل commit بعد مراجعة |
+| Specification and architecture | Ahmed, in dialogue with Claude (Opus 5) |
+| **Test authoring** | Written into each task brief **before** implementation; the implementer was forbidden from altering a character |
+| Implementation | DeepSeek V4 Flash, via `opencode` + AgentRouter — seven tasks |
+| Review gates | Claude (Opus 5): every diff read, tests run independently of the implementer's claim |
+| Decisions and merges | Ahmed — every commit after review |
 
-### لماذا يستحق هذا الذكر
+**The ordering is what matters, not the tooling: the tests came first and were the
+specification.** The model was never asked to write code and then write the thing that proves
+it correct. It was given a written contract and held to it.
 
-الترتيب هو المهم، لا الأداة: **الاختبارات سبقت التنفيذ وكانت هي المواصفة**. لم يُطلب من النموذج أن يكتب كودًا ثم يكتب ما يثبت صحته — أُعطي عقدًا مكتوبًا وحُوسب عليه.
+What the gates actually caught: a dead condition in a type check, a deprecated import, a
+missing return annotation, unreadable number formatting. **No logic error got through** —
+credit to the tests, not to the model.
 
-ما التقطته هذه البوابات فعلًا:
+And what none of them caught: an output that was constantly zero was classified *fragile*
+when it was the most stable number in the report. Neither the reference models nor the review
+found it — **the real data did, on the first run against Omran.**
 
-- شرطًا ميتًا في فحص الأنواع
-- استيرادًا مهجورًا (`typing.Sequence` بدل `collections.abc`)
-- نوع إرجاع ناقصًا
-- تنسيق أرقام غير مقروء
-
-**ولم تمرّ خطأ منطقي واحد.** الفضل للاختبارات لا لجودة النموذج — الاختبارات هي ما جعل التفويض قابلًا للثقة.
-
-### وما لم يجده أي منها
-
-بق التصنيف: مخرَج ثابت عند صفر كان يُصنَّف «هشًا» وهو أثبت ما في التقرير. لم تمسكه النماذج المرجعية ولا المراجعة — **كشفته البيانات الحقيقية عند أول تشغيل على عُمران.**
-
-هذا هو الحد: الاختبارات تثبت أن الحساب صحيح، والبيانات الحقيقية وحدها تكشف ما لم يخطر لأحد أن يكتب له اختبارًا.
+That is the boundary. Tests prove the arithmetic is right; only real data reveals the case
+nobody thought to write a test for.
 
 ---
 
-## الرخصة
+## License
 
 MIT

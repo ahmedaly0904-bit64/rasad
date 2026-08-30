@@ -1,4 +1,55 @@
-# نتائج قياس عُمران — ٢٨ أغسطس ٢٠٢٦
+# Measuring Omran — findings
+
+*Full analysis in Arabic below. Summary in English first.*
+
+**Setup:** `scripts/measure_omran.py` — 100 runs × 100 simulated years, seeds `0..99`.
+Omran at commit `ccba093`, **with no line of it modified**.
+
+## In one sentence
+
+> **Nothing numeric in Omran's output is robust.** Its numbers describe a particular run,
+> not the behaviour of the model.
+
+| Output | Mean | cv | Verdict |
+|---|---|---|---|
+| `final_total_population` | 4,649 | 0.28 | **fragile** |
+| `survivors` | 1.14 | 0.31 | **fragile** |
+| `total_wars` | 13.4 | 0.40 | **fragile** |
+| `total_famines` | 0 | 0 | robust |
+
+Final population ranges from **2,704 to 6,774** across 90% of runs — the number can double on
+the seed alone.
+
+## Three findings
+
+1. **Famines never happen.** Zero in all 100 runs over 100 years. Stable by measurement, but
+   an open question in the model: either the mechanism is never reached, or its condition is
+   unreachable with these parameters.
+
+2. **Omran does not reproduce its own results.** The same seed gives different answers in
+   different processes. Comparing the population curve year by year, runs are identical for
+   nineteen years and then split at year twenty by **one individual**, which becomes hundreds
+   by year one hundred. Strongest suspect — needing confirmation, not proven — is
+   `tuple(frozenset)` over `Nation` objects in `grid.py`, whose ordering follows identity
+   hashes and therefore memory addresses. The timing supports it: year twenty is roughly when
+   national borders first touch, which is the first time that code path runs at all.
+
+3. **Divergence grows from 0.82 to 1,320** over one hundred years. Omran's population curve
+   carries information in its first decades; after that it describes its seed, not its model.
+
+## A bug in Rasad that this data exposed
+
+`total_famines` was zero in every run: zero standard deviation, zero mean. Since
+`cv = std / |mean|`, that gave `inf` and was classified **fragile** — the single most stable
+output in the report.
+
+The reference models missed it: the zero-mean test used `[-1, 1]`, whose standard deviation is
+not zero. Fixed in `analyzer.summarize`: zero spread means `cv = 0.0` whatever the mean.
+
+**The lesson:** reference models prove the arithmetic is right. Only real data reveals the case
+nobody thought to write a test for.
+
+---
 
 القياس: `scripts/measure_omran.py` — ١٠٠ تشغيلة × ١٠٠ سنة، بذور `0..99`.
 عُمران عند `ccba093`، **ولم يُعدَّل منه سطر واحد**.

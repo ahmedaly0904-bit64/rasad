@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
+from reference_models import constant_model, random_walk_model
 
 from rasad.adapter import split_outputs, validate_model
-from reference_models import constant_model, random_walk_model
 
 
 def test_accepts_a_conforming_model():

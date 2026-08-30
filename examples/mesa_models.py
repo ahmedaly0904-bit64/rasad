@@ -7,11 +7,12 @@
     python examples/mesa_models.py
 """
 
-import rasad
 from mesa.examples import BoltzmannWealth, Schelling, WolfSheep
 from mesa.examples.advanced.wolf_sheep.model import WolfSheepScenario
 from mesa.examples.basic.boltzmann_wealth_model.model import BoltzmannScenario
 from mesa.examples.basic.schelling.model import SchellingScenario
+
+import rasad
 
 STEPS = 40
 RUNS = 25

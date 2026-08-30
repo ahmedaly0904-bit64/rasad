@@ -128,7 +128,9 @@ def classify(cv: float, thresholds: dict[str, float] | None = None) -> str:
         ``"robust"`` below the robust threshold, ``"wobbly"`` up to and
         including the wobbly threshold, ``"fragile"`` beyond it.
     """
-    if thresholds is None:
+    # kept as if/else rather than a ternary: the two branches do different
+    # things — one picks a default, the other validates untrusted input.
+    if thresholds is None:  # noqa: SIM108
         thresholds = THRESHOLDS
     else:
         thresholds = validate_thresholds(thresholds)

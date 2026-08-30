@@ -1,12 +1,12 @@
 import pytest
-
-import rasad
 from reference_models import (
     constant_model,
     flat_series_model,
     normal_model,
     random_walk_model,
 )
+
+import rasad
 
 
 def test_constant_model_is_robust():

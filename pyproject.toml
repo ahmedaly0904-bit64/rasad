@@ -17,3 +17,18 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+# S, I, R is the standard notation of compartmental epidemic models.
+# Renaming them to satisfy a linter would make the code harder to read,
+# not easier — the whole point of the notation is that readers know it.
+"examples/*" = ["E741"]

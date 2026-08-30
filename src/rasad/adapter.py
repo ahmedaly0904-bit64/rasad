@@ -16,10 +16,10 @@ Booleans are never accepted, whether Python ``bool`` or ``numpy.bool_``.
 """
 
 import inspect
-
-import numpy as np
 from collections.abc import Callable
 from typing import Any
+
+import numpy as np
 
 
 def validate_model(fn: Callable[..., dict]) -> None:
