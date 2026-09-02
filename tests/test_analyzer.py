@@ -6,6 +6,14 @@ import pytest
 from rasad.analyzer import THRESHOLDS, classify, divergence, summarize
 
 
+def test_rejects_non_finite_values():
+    with pytest.raises(ValueError, match="non-finite values"):
+        summarize([float("inf"),0.1])
+    with pytest.raises(ValueError, match="non-finite values"):
+        summarize([float("-inf"),3])
+    with pytest.raises(ValueError, match="non-finite values"):
+        summarize([float("nan"),1.0])
+
 def test_constant_values_have_zero_spread():
     result = summarize([7.0] * 50)
     assert result["std"] == 0.0

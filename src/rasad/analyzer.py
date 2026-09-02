@@ -42,6 +42,8 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     arr = np.asarray(values, dtype=float)
     if arr.size < 2:
         raise ValueError("need at least 2 values to summarize")
+    if not np.isfinite(arr).all() :
+        raise ValueError("non-finite values")
 
     n = int(arr.size)
     mean = float(arr.mean())
