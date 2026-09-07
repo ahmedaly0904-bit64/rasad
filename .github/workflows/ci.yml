@@ -26,7 +26,7 @@ jobs:
       - name: Lint
         run: |
           pip install ruff
-          ruff check src tests examples
+          ruff check src tests scripts examples
 
       - name: Test
         run: pytest tests -v --cov=rasad --cov-report=term-missing

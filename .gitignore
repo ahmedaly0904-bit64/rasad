@@ -15,10 +15,13 @@ htmlcov/
 mutants/
 .mutmut-cache
 
-# local design notes, not part of the published project
+# local notes and tooling, not part of the published project
 docs/*.pdf
-docs/*.excalidraw
-docs/*.excalidraw.md
+docs/*.excalidraw*
 docs/superpowers/
-docs/testsprite-setup.md
-docs/reading-before-running.md
+docs/*-setup.md
+docs/reading-*.md
+.mcp.json
+.env
+.env.example
+testsprite_tests/
