@@ -14,3 +14,9 @@ __pycache__/
 htmlcov/
 mutants/
 .mutmut-cache
+
+# local design notes, not part of the published project
+docs/*.pdf
+docs/*.excalidraw
+docs/*.excalidraw.md
+docs/superpowers/
