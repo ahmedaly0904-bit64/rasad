@@ -5,7 +5,7 @@ import pytest
 from rasad.adapter import split_outputs, validate_model
 from rasad.adapters.omran import make_omran_run
 
-OMRAN_SRC = "$OMRAN_SRC"
+OMRAN_SRC = os.environ.get("OMRAN_SRC", "../civilization_sim/src")
 
 pytestmark = pytest.mark.skipif(
     not os.path.isdir(OMRAN_SRC), reason="Omran source not available"
