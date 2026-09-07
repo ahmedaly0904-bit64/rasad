@@ -12,3 +12,5 @@ __pycache__/
 *.html
 .coverage
 htmlcov/
+mutants/
+.mutmut-cache

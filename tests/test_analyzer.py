@@ -146,3 +146,9 @@ def test_validate_thresholds_rejects_an_inverted_order():
 
     with pytest.raises(ValueError, match="low must be below moderate"):
         validate_thresholds({"low": 0.5, "moderate": 0.2})
+
+def test_validate_thresholds_rejects_equal_thresholds():
+    from rasad.analyzer import validate_thresholds
+
+    with pytest.raises(ValueError, match="low must be below moderate"):
+        validate_thresholds({"low": 0.2, "moderate": 0.2})
