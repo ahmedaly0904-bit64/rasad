@@ -1,5 +1,5 @@
 [project]
-name = "rasad"
+name = "rasad-sim"
 version = "0.1.0"
 description = "Measure how much of a stochastic simulation's result is a property of the model and how much is the random seed."
 readme = "README.md"

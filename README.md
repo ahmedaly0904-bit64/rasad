@@ -48,7 +48,14 @@ What it found is in [`FINDINGS.md`](FINDINGS.md), and it was not what anyone exp
 ## Install
 
 ```bash
-pip install -e .
+pip install rasad-sim
+```
+
+The distribution is `rasad-sim` because `rasad` collides with an existing name on
+PyPI. The import is unaffected:
+
+```python
+import rasad
 ```
 
 Python 3.12+ · numpy · plotly
