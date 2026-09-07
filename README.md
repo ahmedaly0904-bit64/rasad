@@ -191,12 +191,28 @@ python -m venv .venv
 .venv/bin/pytest tests -v
 ```
 
-71 tests · 97% coverage · linted with ruff
+73 tests · 97% line coverage · 357 of 452 mutants killed · linted with ruff
+
+The coverage figure is the weakest of the three. Mutation testing is what showed why:
+`validate_thresholds` was fully covered and still accepted two equal cutoffs, because
+no test passed the one input that separates `<` from `<=`.
 
 The statistics are tested against models whose answers are known analytically: a constant
 must give a standard deviation of exactly zero; a random walk's divergence must grow as the
 square root of time. Those tests caught real bugs — including a collapsed axis that would
 have produced plausible, meaningless numbers.
+
+## Notes on the implementation
+
+Three analyses of the code, in Arabic:
+
+- [فئات المدخلات](docs/input-classes.md) — the five input classes `summarize()` actually
+  distinguishes, each with the test that covers it, and why branch order decides which class
+  a list falls into.
+- [كم تشغيلة تكفي؟](docs/how-many-runs.md) — the standard error of the mean applied to Omran:
+  100 runs pin the mean to 2.8%, and reaching 1% costs 784.
+- [حدود الوحدات](docs/module-boundaries.md) — the deletion test applied to each of Rasad's own
+  modules, separating splits forced by something that happened from splits made on a guess.
 
 ---
 
