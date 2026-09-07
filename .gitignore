@@ -25,3 +25,4 @@ docs/reading-*.md
 .env
 .env.example
 testsprite_tests/
+scripts/watch-*.py
