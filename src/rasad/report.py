@@ -11,16 +11,26 @@ from typing import Any
 
 import plotly.graph_objects as go
 
-# Fixed precision so two runs with the same seeds render byte-identically.
+# Deterministic rendering so two runs with the same seeds stay byte-identical:
+# fixed decimals for magnitudes large enough to keep them, significant digits
+# for the rest.
 _VALUE_DECIMALS = 2
 _RATIO_DECIMALS = 4
 
 
 def _fmt(value: float) -> str:
-    """Format a magnitude — grouped thousands, fixed decimals, inf-safe."""
+    """Format a magnitude — inf-safe, and never rounds a small value away.
+
+    Exact zero and magnitudes of at least 0.005 (the point past which two
+    decimals can no longer round to ``0.00``) render with grouped thousands
+    and two fixed decimals; smaller magnitudes render with three significant
+    digits, e.g. ``0.001`` or ``1.2e-09``, so they stay visible.
+    """
     if math.isinf(value):
         return "inf"
-    return f"{value:,.{_VALUE_DECIMALS}f}"
+    if value == 0 or abs(value) >= 0.005:
+        return f"{value:,.{_VALUE_DECIMALS}f}"
+    return f"{value:.3g}"
 
 
 def _fmt_ratio(value: float) -> str:

@@ -5,9 +5,11 @@ from reference_models import (
     normal_model,
     random_walk_model,
     shape_drift_model,
+    tiny_value_model,
 )
 
 import rasad
+from rasad.report import _fmt
 
 
 def test_constant_model_has_low_variability():
@@ -129,3 +131,21 @@ def test_bad_thresholds_fail_before_any_run():
             counting_model, params={}, runs=50, thresholds={"low": 0.9, "moderate": 0.1}
         )
     assert calls == []
+
+
+def test_fmt_keeps_small_magnitudes_visible():
+    assert _fmt(0.0) == "0.00"
+    assert _fmt(1234.5) == "1,234.50"
+    assert _fmt(0.01) == "0.01"
+    assert _fmt(0.005) == "0.01"
+    assert _fmt(0.001) == "0.001"
+    assert _fmt(-0.001) == "-0.001"
+    assert _fmt(1.2e-9) == "1.2e-09"
+    assert _fmt(float("inf")) == "inf"
+
+
+def test_summary_does_not_render_a_small_output_as_zero():
+    text = rasad.measure(tiny_value_model, params={}, runs=20).summary()
+    line = next(row for row in text.splitlines() if row.strip().startswith("value:"))
+    assert "mean 0.00 " not in line
+    assert "0.001" in line

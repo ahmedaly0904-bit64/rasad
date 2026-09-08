@@ -39,3 +39,9 @@ def shape_drift_model(params: dict, seed: int) -> dict:
     """Returns one key as a number on even seeds and a series on odd ones.
     Expect: measure() rejects it rather than summarizing half the runs."""
     return {"v": [1.0, 2.0] if seed % 2 else 3.0}
+
+
+def tiny_value_model(params: dict, seed: int) -> dict:
+    """Draws values around 0.001. Expect: the summary shows them, not 0.00."""
+    rng = np.random.default_rng(seed)
+    return {"value": float(rng.normal(0.001, 0.0002))}
