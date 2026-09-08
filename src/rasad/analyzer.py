@@ -3,7 +3,9 @@
 This module knows nothing about simulations or how the numbers it is
 given were produced. It only describes the spread and location of a
 sample: count, mean, sample standard deviation, coefficient of
-variation, extrema, and percentile interval.
+variation, extrema, and percentile interval — and, separately, how
+well that sample pins its own mean: the standard error and a
+bootstrap confidence interval.
 """
 
 import math
@@ -17,6 +19,20 @@ import numpy as np
 # which case these defaults are ignored.
 THRESHOLDS: dict[str, float] = {"low": 0.05, "moderate": 0.20}
 
+# Fixed bootstrap settings so the confidence interval is a pure function of
+# the input: a seeded generator always yields the same resample draws, so the
+# same values in give byte-identical ``ci_low`` / ``ci_high`` out, in every
+# process. The seed is deliberately never drawn from the clock or from global
+# numpy state.
+_BOOTSTRAP_RESAMPLES = 10_000
+_BOOTSTRAP_SEED = 0
+# Resample in chunks of at most this many elements. A single (resamples, n)
+# draw would allocate memory linear in the run count — 1.5 GB at n=10,000,
+# a run count this library's own docs contemplate. Chunking bounds the peak
+# regardless of n, and numpy's generator consumes its bit stream value by
+# value, so the chunked draws are the identical sequence: same numbers out.
+_BOOTSTRAP_CHUNK_ELEMENTS = 4_000_000
+
 
 def summarize(values: Sequence[float]) -> dict[str, float | int]:
     """Summarize a sample of numbers.
@@ -29,10 +45,20 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     Returns
     -------
     dict
-        Keys ``n``, ``mean``, ``std``, ``cv``, ``min``, ``max``, ``p05``, ``p95``.
-        ``std`` is the sample standard deviation (``ddof=1``); ``cv`` is
-        ``std / abs(mean)``; it is zero whenever ``std`` is zero, and
-        infinite when the mean is zero but the values still vary.
+        Keys ``n``, ``mean``, ``std``, ``cv``, ``min``, ``max``, ``p05``,
+        ``p95``, ``se``, ``ci_low``, ``ci_high``. ``std`` is the sample
+        standard deviation (``ddof=1``); ``cv`` is ``std / abs(mean)``; it
+        is zero whenever ``std`` is zero, and infinite when the mean is zero
+        but the values still vary.
+
+        ``se``, ``ci_low`` and ``ci_high`` describe the uncertainty of the
+        mean: ``se`` is the standard error, ``std / sqrt(n)``, and
+        ``ci_low``/``ci_high`` bound a 90% bootstrap percentile confidence
+        interval on the mean. ``std``, ``cv``, ``p05`` and ``p95``, by
+        contrast, describe the spread of the sample: where a single run
+        lands. The two answer different questions — how well the runs pin
+        the average versus how far apart the runs lie — and are not
+        interchangeable.
 
     Raises
     ------
@@ -62,6 +88,20 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
         cv = std / abs(mean)
     p05 = float(np.percentile(arr, 5))
     p95 = float(np.percentile(arr, 95))
+    se = std / math.sqrt(n)
+    if std == 0.0:
+        ci_low = ci_high = mean
+    else:
+        rng = np.random.default_rng(_BOOTSTRAP_SEED)
+        rows = max(1, _BOOTSTRAP_CHUNK_ELEMENTS // n)
+        means = np.empty(_BOOTSTRAP_RESAMPLES)
+        for start in range(0, _BOOTSTRAP_RESAMPLES, rows):
+            size = min(rows, _BOOTSTRAP_RESAMPLES - start)
+            means[start : start + size] = arr[
+                rng.integers(0, n, size=(size, n))
+            ].mean(axis=1)
+        ci_low = float(np.percentile(means, 5))
+        ci_high = float(np.percentile(means, 95))
 
     return {
         "n": n,
@@ -72,6 +112,9 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
         "max": float(arr.max()),
         "p05": p05,
         "p95": p95,
+        "se": se,
+        "ci_low": ci_low,
+        "ci_high": ci_high,
     }
 
 

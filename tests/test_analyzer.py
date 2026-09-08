@@ -174,3 +174,57 @@ def test_validate_thresholds_rejects_equal_thresholds():
 
     with pytest.raises(ValueError, match="low must be below moderate"):
         validate_thresholds({"low": 0.2, "moderate": 0.2})
+
+
+def test_standard_error_is_the_std_over_root_n():
+    result = summarize([1.0, 2.0, 3.0, 4.0, 5.0])
+    assert result["se"] == pytest.approx(result["std"] / math.sqrt(5))
+
+
+def test_a_constant_sample_has_no_uncertainty_about_its_mean():
+    result = summarize([7.0] * 50)
+    assert result["se"] == 0.0
+    assert result["ci_low"] == 7.0
+    assert result["ci_high"] == 7.0
+
+
+def test_the_mean_interval_is_far_tighter_than_the_sample_spread():
+    """The two intervals answer different questions: p05-p95 is where a
+    single run lands, ci_low-ci_high is where the mean sits."""
+    rng = np.random.default_rng(0)
+    result = summarize(rng.normal(100.0, 15.0, 500).tolist())
+    spread = result["p95"] - result["p05"]
+    interval = result["ci_high"] - result["ci_low"]
+    assert interval < spread / 5
+
+
+def test_the_mean_interval_brackets_the_true_mean():
+    rng = np.random.default_rng(1)
+    result = summarize(rng.normal(100.0, 15.0, 500).tolist())
+    assert result["ci_low"] < 100.0 < result["ci_high"]
+
+
+def test_the_bootstrap_agrees_with_normal_theory_on_symmetric_data():
+    """Not a tautology: it is the check that the resampling is wired up
+    right. The two must diverge on skewed data, which is why the interval
+    is a bootstrap and not mean +/- 1.645 * se."""
+    rng = np.random.default_rng(0)
+    result = summarize(rng.normal(100.0, 15.0, 500).tolist())
+    interval = result["ci_high"] - result["ci_low"]
+    assert interval == pytest.approx(2 * 1.645 * result["se"], rel=0.1)
+
+
+def test_a_sample_larger_than_one_bootstrap_chunk_still_summarizes():
+    """The bootstrap resamples in bounded chunks so peak memory does not grow
+    with the run count. Crossing a chunk boundary must not change the answer."""
+    rng = np.random.default_rng(2)
+    values = rng.normal(50.0, 5.0, 5000).tolist()
+    result = summarize(values)
+    assert result["ci_low"] < 50.0 < result["ci_high"]
+    assert summarize(values) == result
+
+
+def test_summarize_is_a_pure_function_of_its_input():
+    """The bootstrap must not make the summary vary between calls."""
+    values = [1.0, 5.0, 2.0, 8.0, 3.0, 13.0, 21.0]
+    assert summarize(values) == summarize(values)
