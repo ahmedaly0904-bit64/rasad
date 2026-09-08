@@ -159,6 +159,28 @@ def test_fmt_keeps_small_magnitudes_visible():
 
 def test_summary_does_not_render_a_small_output_as_zero():
     text = rasad.measure(tiny_value_model, params={}, runs=20).summary()
-    line = next(row for row in text.splitlines() if row.strip().startswith("value:"))
-    assert "mean 0.00 " not in line
-    assert "0.001" in line
+    lines = text.splitlines()
+    start = lines.index("  value")
+    mean_line = lines[start + 1]
+    assert mean_line.startswith("    mean")
+    mean = mean_line[len("    mean   ") :].split(" ", 1)[0]
+    assert mean != "0.00"
+    assert "0.001" in mean_line
+
+
+def test_summary_separates_the_mean_from_the_spread():
+    text = rasad.measure(constant_model, params={}, runs=20).summary()
+    assert 'Scalar outputs — "mean" is where the average sits, "spread" is where one run lands:' in text
+    assert "    mean   42.00 ± 0.00 · 90% CI [42.00, 42.00]" in text
+    assert "    spread std 0.00 · cv 0.0000 · p05-p95 [42.00, 42.00] · low" in text
+
+
+def test_summary_shows_a_mean_interval_tighter_than_the_spread():
+    """On a wide sample the two intervals must visibly differ, or the
+    layout is not earning the space it takes."""
+    report = rasad.measure(normal_model, params={"mu": 100.0, "sigma": 15.0}, runs=200)
+    stats = report.scalars["value"]
+    assert stats["ci_high"] - stats["ci_low"] < (stats["p95"] - stats["p05"]) / 5
+    text = report.summary()
+    assert "90% CI [" in text
+    assert "p05-p95 [" in text

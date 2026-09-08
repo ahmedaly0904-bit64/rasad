@@ -77,10 +77,15 @@ class Report:
         Returns
         -------
         str
-            A header with the run count, one row per scalar output
-            (name, mean, standard deviation, coefficient of variation,
-            p05-p95 interval, variability) and, when present, one
-            line per series showing how the divergence grew.
+            A header with the run count and the thresholds line, then
+            one labelled block per scalar output and, when present,
+            one line per series showing how the divergence grew. Each
+            scalar block has a ``mean`` line and a ``spread`` line:
+            ``mean`` reports the average with its standard error and
+            90% confidence interval, which is where the mean sits;
+            ``spread`` reports the standard deviation, coefficient of
+            variation and p05-p95 interval, which is where one run
+            lands, plus the variability label.
         """
         lines = [f"Rasad report of {self.runs} runs"]
         lines.append(
@@ -90,14 +95,22 @@ class Report:
         )
 
         if self.scalars:
-            lines.append("Scalar outputs:")
+            lines.append(
+                'Scalar outputs — "mean" is where the average sits, '
+                '"spread" is where one run lands:'
+            )
             for name, stats in self.scalars.items():
+                lines.append(f"  {name}")
                 lines.append(
-                    f"  {name}: mean {_fmt(stats['mean'])} | "
-                    f"std {_fmt(stats['std'])} | "
-                    f"cv {_fmt_ratio(stats['cv'])} | "
-                    f"p05-p95 [{_fmt(stats['p05'])}, {_fmt(stats['p95'])}] | "
-                    f"variability: {stats['variability']}"
+                    f"    {'mean':<6} {_fmt(stats['mean'])} ± "
+                    f"{_fmt(stats['se'])} · 90% CI "
+                    f"[{_fmt(stats['ci_low'])}, {_fmt(stats['ci_high'])}]"
+                )
+                lines.append(
+                    f"    {'spread':<6} std {_fmt(stats['std'])} · "
+                    f"cv {_fmt_ratio(stats['cv'])} · p05-p95 "
+                    f"[{_fmt(stats['p05'])}, {_fmt(stats['p95'])}] · "
+                    f"{stats['variability']}"
                 )
 
         if self.series:
