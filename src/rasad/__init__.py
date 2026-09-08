@@ -54,8 +54,10 @@ def measure(
     Raises
     ------
     ValueError
-        When ``runs`` is below 2, or when ``thresholds`` fails
-        :func:`rasad.analyzer.validate_thresholds`.
+        When ``runs`` is below 2, when ``thresholds`` fails
+        :func:`rasad.analyzer.validate_thresholds`, or when an output
+        changes shape between runs — the same key returned as a number
+        in some runs and as a sequence in the others.
     """
     if thresholds is None:
         thresholds = THRESHOLDS
@@ -72,6 +74,17 @@ def measure(
             scalar_values.setdefault(name, []).append(value)
         for name, curve in series.items():
             series_curves.setdefault(name, []).append(curve)
+
+    for name in sorted(scalar_values.keys() | series_curves.keys()):
+        n_scalars = len(scalar_values.get(name, ()))
+        n_series = len(series_curves.get(name, ()))
+        if n_scalars != runs and n_series != runs:
+            raise ValueError(
+                f"output {name!r} changed shape between runs: it was a single "
+                f"number in {n_scalars} of {runs} runs and a sequence in "
+                f"{n_series} of them; every output must keep the same shape "
+                f"in every run"
+            )
 
     scalars: dict[str, dict[str, Any]] = {}
     for name, values in scalar_values.items():

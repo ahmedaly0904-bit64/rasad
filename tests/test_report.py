@@ -67,14 +67,8 @@ def test_measure_rejects_fewer_than_two_runs():
         rasad.measure(constant_model, params={}, runs=1)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="shape drift: measure() accepts an output that is a number in some runs "
-    "and a list in others, then silently reports statistics over half the runs "
-    "instead of raising ValueError",
-)
 def test_measure_rejects_an_output_that_changes_shape_between_runs():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="output 'v'"):
         rasad.measure(shape_drift_model, params={}, runs=100)
 
 
