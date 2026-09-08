@@ -41,3 +41,16 @@ def test_rejects_inconsistent_output_keys():
 
     with pytest.raises(ValueError, match="same output keys"):
         run_all(unstable, make_plan({}, runs=2))
+
+
+def test_a_model_failure_carries_the_seed_that_caused_it():
+    def crash_on_seed_3(params, seed):
+        if seed == 3:
+            raise RuntimeError("boom")
+        return {"value": float(seed)}
+
+    with pytest.raises(RuntimeError) as excinfo:
+        run_all(crash_on_seed_3, make_plan({}, runs=10))
+
+    assert "boom" in str(excinfo.value)
+    assert any("seed 3" in note for note in excinfo.value.__notes__)

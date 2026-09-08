@@ -40,12 +40,19 @@ def run_all(fn: Callable[..., dict], plan: list[tuple[dict, int]]) -> list[dict]
         something other than a dict.
     ValueError
         When runs do not all return the same set of output keys.
+    Exception
+        Any exception raised by the model propagates unchanged, with a
+        note attached naming the seed of the run that raised it.
     """
     validate_model(fn)
 
     results: list[dict] = []
     for params, seed in plan:
-        out = fn(params, seed)
+        try:
+            out = fn(params, seed)
+        except Exception as exc:
+            exc.add_note(f"raised by the model during the run with seed {seed}")
+            raise
         if not isinstance(out, dict):
             raise TypeError(
                 f"model must return a dict, got {type(out).__name__} from seed {seed}"
