@@ -12,6 +12,12 @@ import random
 import sys
 from collections.abc import Callable
 
+_DEFAULT_NATIONS = (
+    {"name": "Nation_A", "population": 500, "food": 2000, "growth_rate": 0.03},
+    {"name": "Nation_B", "population": 80, "food": 2000, "growth_rate": 0.035},
+    {"name": "Nation_C", "population": 200, "food": 2000, "growth_rate": 0.032},
+)
+
 
 def make_omran_run(omran_src: str, years: int) -> Callable[[dict, int], dict]:
     """Build a Rasad-compatible model function that runs Omran.
@@ -31,7 +37,19 @@ def make_omran_run(omran_src: str, years: int) -> Callable[[dict, int], dict]:
         A closure ``run(params, seed)`` that seeds Python's global RNG,
         builds a fresh set of nations, steps Omran's ``WorldModel`` for
         ``years`` years with stdout suppressed, and returns Omran's output
-        as scalars plus a population trace.
+        as scalars plus a population trace. ``params`` accepts a single
+        key, ``nations``: a list of dicts, each holding the keyword
+        arguments for Omran's ``Nation(name, population, food,
+        growth_rate)``. When the key is absent, the three defaults in
+        ``_DEFAULT_NATIONS`` are used. A fresh ``Nation`` is built on
+        every run; instances are never reused between runs.
+
+    Raises
+    ------
+    ValueError
+        When the returned ``run`` is called with a ``params`` dict that
+        contains any key other than ``nations``. The offending keys are
+        named in the message so a setting can never be silently ignored.
     """
     if omran_src not in sys.path:
         sys.path.insert(0, omran_src)
@@ -42,11 +60,15 @@ def make_omran_run(omran_src: str, years: int) -> Callable[[dict, int], dict]:
     def run(params: dict, seed: int) -> dict:
         random.seed(seed)
 
-        nations = [
-            Nation(name="Nation_A", population=500, food=2000, growth_rate=0.03),
-            Nation(name="Nation_B", population=80, food=2000, growth_rate=0.035),
-            Nation(name="Nation_C", population=200, food=2000, growth_rate=0.032),
-        ]
+        unknown = sorted(set(params) - {"nations"})
+        if unknown:
+            raise ValueError(
+                f"Unknown params keys: {', '.join(unknown)}. "
+                "The only supported key is 'nations'."
+            )
+
+        nations_spec = params.get("nations", _DEFAULT_NATIONS)
+        nations = [Nation(**spec) for spec in nations_spec]
 
         population_trace = []
         with contextlib.redirect_stdout(io.StringIO()):
