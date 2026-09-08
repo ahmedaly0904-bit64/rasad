@@ -201,11 +201,16 @@ python -m venv .venv
 .venv/bin/pytest tests -v
 ```
 
-73 tests · 97% line coverage · 357 of 452 mutants killed · linted with ruff
+95 tests · 98% line coverage · 410 of 540 mutants killed · linted with ruff
 
-The coverage figure is the weakest of the three. Mutation testing is what showed why:
-`validate_thresholds` was fully covered and still accepted two equal cutoffs, because
-no test passed the one input that separates `<` from `<=`.
+The mutation figure is the weakest of the three, and the gap between it and the coverage
+figure is the point: `validate_thresholds` was fully covered and still accepted two equal
+cutoffs, because no test passed the one input that separates `<` from `<=`. Coverage says
+a line ran. A surviving mutant says nothing checked what it did.
+
+Most of the survivors — 54 of 129 — are in the Omran adapter, whose tests assert bounds
+rather than values because Omran does not reproduce its own results. Against a simulation
+that answers differently each run, there is no tighter assertion to write.
 
 The statistics are tested against models whose answers are known analytically: a constant
 must give a standard deviation of exactly zero; a random walk's divergence must grow as the
