@@ -4,6 +4,7 @@ from reference_models import (
     flat_series_model,
     normal_model,
     random_walk_model,
+    shape_drift_model,
 )
 
 import rasad
@@ -64,6 +65,17 @@ def test_summary_names_every_output_and_its_variability():
 def test_measure_rejects_fewer_than_two_runs():
     with pytest.raises(ValueError, match="at least 2"):
         rasad.measure(constant_model, params={}, runs=1)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="shape drift: measure() accepts an output that is a number in some runs "
+    "and a list in others, then silently reports statistics over half the runs "
+    "instead of raising ValueError",
+)
+def test_measure_rejects_an_output_that_changes_shape_between_runs():
+    with pytest.raises(ValueError):
+        rasad.measure(shape_drift_model, params={}, runs=100)
 
 
 def test_plot_has_one_trace_per_series():

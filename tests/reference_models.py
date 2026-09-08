@@ -33,3 +33,9 @@ def random_walk_model(params: dict, seed: int) -> dict:
     rng = np.random.default_rng(seed)
     steps = params["steps"]
     return {"trace": np.cumsum(rng.normal(0.0, 1.0, steps)).tolist()}
+
+
+def shape_drift_model(params: dict, seed: int) -> dict:
+    """Returns one key as a number on even seeds and a series on odd ones.
+    Expect: measure() rejects it rather than summarizing half the runs."""
+    return {"v": [1.0, 2.0] if seed % 2 else 3.0}
