@@ -45,3 +45,9 @@ def tiny_value_model(params: dict, seed: int) -> dict:
     """Draws values around 0.001. Expect: the summary shows them, not 0.00."""
     rng = np.random.default_rng(seed)
     return {"value": float(rng.normal(0.001, 0.0002))}
+
+
+def empty_series_model(params: dict, seed: int) -> dict:
+    """A series with no time steps at all.
+    Expect: rejected, not rendered as a zero-length divergence curve."""
+    return {"trace": []}

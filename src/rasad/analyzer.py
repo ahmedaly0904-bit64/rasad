@@ -165,14 +165,17 @@ def divergence(series: Sequence[Sequence[float]]) -> list[float]:
     Raises
     ------
     ValueError
-        When fewer than two series are provided, or when the series do
-        not all have the same length.
+        When fewer than two series are provided, when the series do
+        not all have the same length, or when a series has no time
+        steps.
     """
     rows = [np.asarray(row, dtype=float) for row in series]
     if len(rows) < 2:
         raise ValueError("need at least 2 series to measure divergence")
     if any(len(row) != len(rows[0]) for row in rows):
         raise ValueError("all series must have the same length")
+    if len(rows[0]) == 0:
+        raise ValueError("each series must have at least one time step")
 
     stack = np.stack(rows)
     return [float(std) for std in stack.std(axis=0, ddof=1)]

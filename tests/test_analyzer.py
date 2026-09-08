@@ -87,6 +87,11 @@ def test_divergence_needs_at_least_two_series():
         divergence([[1.0, 2.0]])
 
 
+def test_divergence_rejects_empty_series():
+    with pytest.raises(ValueError, match="at least one time step"):
+        divergence([[], []])
+
+
 def test_cv_is_zero_when_the_value_never_varies_at_zero():
     """A value constant at zero is fully determined — there is no spread at all.
 

@@ -1,6 +1,7 @@
 import pytest
 from reference_models import (
     constant_model,
+    empty_series_model,
     flat_series_model,
     normal_model,
     random_walk_model,
@@ -72,6 +73,11 @@ def test_measure_rejects_fewer_than_two_runs():
 def test_measure_rejects_an_output_that_changes_shape_between_runs():
     with pytest.raises(ValueError, match="output 'v'"):
         rasad.measure(shape_drift_model, params={}, runs=100)
+
+
+def test_measure_rejects_a_series_that_is_always_empty():
+    with pytest.raises(ValueError, match="at least one time step"):
+        rasad.measure(empty_series_model, params={}, runs=5)
 
 
 def test_plot_has_one_trace_per_series():
