@@ -51,6 +51,18 @@ def test_unknown_params_are_rejected_instead_of_ignored():
         run({"growth_rate": 0.05}, 1)
 
 
+def test_a_rejected_call_does_not_touch_the_global_rng():
+    import random
+
+    run = make_omran_run(OMRAN_SRC, years=5)
+    random.seed(12345)
+    before = random.random()
+    random.seed(12345)
+    with pytest.raises(ValueError):
+        run({"growth_rate": 0.05}, 999)
+    assert random.random() == before
+
+
 def test_default_nations_are_used_when_params_is_empty():
     run = make_omran_run(OMRAN_SRC, years=5)
     out = run({}, 1)

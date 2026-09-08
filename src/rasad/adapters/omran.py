@@ -58,14 +58,16 @@ def make_omran_run(omran_src: str, years: int) -> Callable[[dict, int], dict]:
     from world import WorldModel
 
     def run(params: dict, seed: int) -> dict:
-        random.seed(seed)
-
+        # Validate before seeding: a rejected call must leave the caller's
+        # global RNG exactly as it found it.
         unknown = sorted(set(params) - {"nations"})
         if unknown:
             raise ValueError(
                 f"Unknown params keys: {', '.join(unknown)}. "
                 "The only supported key is 'nations'."
             )
+
+        random.seed(seed)
 
         nations_spec = params.get("nations", _DEFAULT_NATIONS)
         nations = [Nation(**spec) for spec in nations_spec]

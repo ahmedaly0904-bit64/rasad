@@ -19,7 +19,7 @@ _RATIO_DECIMALS = 4
 
 
 def _fmt(value: float) -> str:
-    """Format a magnitude — inf-safe, and never rounds a small value away.
+    """Format a magnitude — signed-inf-safe, and never rounds a small value away.
 
     Exact zero and magnitudes of at least 0.005 (the point past which two
     decimals can no longer round to ``0.00``) render with grouped thousands
@@ -27,7 +27,7 @@ def _fmt(value: float) -> str:
     digits, e.g. ``0.001`` or ``1.2e-09``, so they stay visible.
     """
     if math.isinf(value):
-        return "inf"
+        return "-inf" if value < 0 else "inf"
     if value == 0 or abs(value) >= 0.005:
         return f"{value:,.{_VALUE_DECIMALS}f}"
     return f"{value:.3g}"
@@ -36,7 +36,7 @@ def _fmt(value: float) -> str:
 def _fmt_ratio(value: float) -> str:
     """Format a dimensionless ratio, which needs more decimals than a magnitude."""
     if math.isinf(value):
-        return "inf"
+        return "-inf" if value < 0 else "inf"
     return f"{value:.{_RATIO_DECIMALS}f}"
 
 

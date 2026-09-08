@@ -154,6 +154,7 @@ def test_fmt_keeps_small_magnitudes_visible():
     assert _fmt(-0.001) == "-0.001"
     assert _fmt(1.2e-9) == "1.2e-09"
     assert _fmt(float("inf")) == "inf"
+    assert _fmt(float("-inf")) == "-inf"
 
 
 def test_summary_does_not_render_a_small_output_as_zero():

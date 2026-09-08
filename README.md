@@ -182,7 +182,10 @@ without needing a word on top of it.
 - **Only the seed varies.** Parameters are held fixed, so *"which parameter drives the
   result?"* is not answered yet. Sensitivity analysis is the next version.
 - **Execution is sequential.** No parallelism.
-- **One value per output name per run.** A model whose keys change between runs is rejected.
+- **One value per output name per run.** A model is rejected when its output keys change
+  between runs, and when a key keeps its name but changes shape — a number in some runs and
+  a sequence in others. Both would otherwise summarise a subset of the runs while reporting
+  the full count.
 
 Accepted outputs: Python numbers, numpy scalars, 1-D numeric numpy arrays, lists and tuples.
 **Booleans are always rejected** — alone or inside a list — because an average of ones and

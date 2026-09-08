@@ -57,7 +57,9 @@ def measure(
         When ``runs`` is below 2, when ``thresholds`` fails
         :func:`rasad.analyzer.validate_thresholds`, or when an output
         changes shape between runs — the same key returned as a number
-        in some runs and as a sequence in the others.
+        in some runs and as a sequence in the others. Also propagates the
+        ``ValueError`` raised by :func:`rasad.analyzer.divergence` for a
+        series with no time steps or a non-finite value in it.
     """
     if thresholds is None:
         thresholds = THRESHOLDS

@@ -37,7 +37,9 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     Raises
     ------
     ValueError
-        When fewer than two values are provided.
+        When fewer than two values are provided, or when any value is
+        not finite. :func:`divergence` rejects a non-finite series with
+        the same message, so one phrase matches either path.
     """
     arr = np.asarray(values, dtype=float)
     if arr.size < 2:
