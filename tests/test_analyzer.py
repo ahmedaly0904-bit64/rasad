@@ -92,6 +92,23 @@ def test_divergence_rejects_empty_series():
         divergence([[], []])
 
 
+def test_divergence_rejects_non_finite_values():
+    with pytest.raises(ValueError, match="non-finite values"):
+        divergence([[1.0, float("nan")], [1.0, 2.0]])
+    with pytest.raises(ValueError, match="non-finite values"):
+        divergence([[1.0, float("inf")], [1.0, 2.0]])
+    with pytest.raises(ValueError, match="non-finite values"):
+        divergence([[1.0, float("-inf")], [1.0, 2.0]])
+
+
+def test_divergence_and_summarize_reject_non_finite_alike():
+    """The same value must not be rejected as a scalar and accepted as a series."""
+    with pytest.raises(ValueError, match="non-finite values"):
+        summarize([1.0, float("nan")])
+    with pytest.raises(ValueError, match="non-finite values"):
+        divergence([[1.0, float("nan")], [1.0, 2.0]])
+
+
 def test_cv_is_zero_when_the_value_never_varies_at_zero():
     """A value constant at zero is fully determined — there is no spread at all.
 

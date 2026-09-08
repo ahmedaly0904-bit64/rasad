@@ -3,6 +3,7 @@ from reference_models import (
     constant_model,
     empty_series_model,
     flat_series_model,
+    nan_series_model,
     normal_model,
     random_walk_model,
     shape_drift_model,
@@ -78,6 +79,11 @@ def test_measure_rejects_an_output_that_changes_shape_between_runs():
 def test_measure_rejects_a_series_that_is_always_empty():
     with pytest.raises(ValueError, match="at least one time step"):
         rasad.measure(empty_series_model, params={}, runs=5)
+
+
+def test_measure_rejects_a_series_containing_a_nan():
+    with pytest.raises(ValueError, match="non-finite values"):
+        rasad.measure(nan_series_model, params={}, runs=5)
 
 
 def test_plot_has_one_trace_per_series():

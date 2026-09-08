@@ -42,7 +42,7 @@ def summarize(values: Sequence[float]) -> dict[str, float | int]:
     arr = np.asarray(values, dtype=float)
     if arr.size < 2:
         raise ValueError("need at least 2 values to summarize")
-    if not np.isfinite(arr).all() :
+    if not np.isfinite(arr).all():
         raise ValueError("non-finite values")
 
     n = int(arr.size)
@@ -166,8 +166,8 @@ def divergence(series: Sequence[Sequence[float]]) -> list[float]:
     ------
     ValueError
         When fewer than two series are provided, when the series do
-        not all have the same length, or when a series has no time
-        steps.
+        not all have the same length, when a series has no time
+        steps, or when a series contains a non-finite value.
     """
     rows = [np.asarray(row, dtype=float) for row in series]
     if len(rows) < 2:
@@ -178,4 +178,6 @@ def divergence(series: Sequence[Sequence[float]]) -> list[float]:
         raise ValueError("each series must have at least one time step")
 
     stack = np.stack(rows)
+    if not np.isfinite(stack).all():
+        raise ValueError("non-finite values")
     return [float(std) for std in stack.std(axis=0, ddof=1)]
